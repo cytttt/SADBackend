@@ -19,6 +19,11 @@ func init() {
 }
 
 func main() {
+	port := ":" + os.Getenv("PORT")
+	if port == ":" {
+		port = viper.GetString("PORT")
+	}
+
 	gin.SetMode(gin.DebugMode)
 	router := routers.InitRouters()
 
@@ -35,5 +40,5 @@ func main() {
 		}
 	}()
 
-	router.Run(viper.GetString("PORT"))
+	router.Run(port)
 }
