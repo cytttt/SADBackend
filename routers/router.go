@@ -47,6 +47,11 @@ func InitRouters() *gin.Engine {
 		gymAPI := apiV1.Group("/gym")
 		{
 			gymAPI.GET("/list", v1.GetGymList)
+			gymAPI.GET("/machine", v1.GetMachineList)
+		}
+		machineAPI := apiV1.Group("/machine")
+		{
+			machineAPI.PUT("/status", v1.UpdateMachineStatus)
 		}
 	}
 	return router

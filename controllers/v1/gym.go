@@ -18,7 +18,8 @@ type GetGymListResp struct {
 }
 
 // @Summary Get Gym List
-// @Tags Gym
+// @Produce json
+// @Tags All
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/gym/list [get]
