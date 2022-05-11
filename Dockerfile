@@ -10,5 +10,4 @@ WORKDIR /go/src/sad
 COPY --from=builder /go/src/sad/SADBackend .
 COPY --from=builder /go/src/sad/.env .env
 RUN apt-get -qq update && apt-get -qq install -y --no-install-recommends ca-certificates curl
-EXPOSE 8888
 ENTRYPOINT ["./SADBackend"]
