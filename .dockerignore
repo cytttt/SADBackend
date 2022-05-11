@@ -23,7 +23,6 @@ SADBackend
 .gitignore
 .vscode
 .dockerignore
-.env
 log/*
 docs/*
 env/*
