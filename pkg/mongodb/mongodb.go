@@ -16,9 +16,11 @@ type MongoAccess struct {
 	DB     *mongo.Database
 }
 
-var UserCollection *mongo.Collection
+var ClientCollection *mongo.Collection
+var StaffCollection *mongo.Collection
 var ReservationCollection *mongo.Collection
 var GymCollection *mongo.Collection
+var MachineCollection *mongo.Collection
 
 func Init() {
 
@@ -34,9 +36,11 @@ func Init() {
 	}
 
 	// Setup Collection
-	UserCollection = DB.Collection("user")
+	ClientCollection = DB.Collection("client")
+	StaffCollection = DB.Collection("staff")
 	ReservationCollection = DB.Collection("reservation")
 	GymCollection = DB.Collection("gym")
+	MachineCollection = DB.Collection("machine")
 
 	log.Printf("[info] MongoDB initialization is done")
 }

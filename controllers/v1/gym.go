@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-type GetGymListRequest struct {
+type GetGymListResp struct {
 	BranchGymID string `json:"branch_gym_id"`
 	Name        string `json:"name"`
 	Status      string `json:"status"`
@@ -33,13 +33,13 @@ func GetGymList(c *gin.Context) {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, nil)
 		return
 	}
-	var results []GetGymListRequest
+	var results []GetGymListResp
 	for _, gym := range gyms {
 		status := "uncrowed"
 		if float64(gym.CurrentNumberPeople) > float64(gym.Info.ClientNumberLimit)*0.8 {
 			status = "crowded"
 		}
-		results = append(results, GetGymListRequest{
+		results = append(results, GetGymListResp{
 			BranchGymID: gym.BranchGymID,
 			Name:        gym.Name,
 			Status:      status,
