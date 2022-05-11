@@ -12,15 +12,15 @@ import (
 )
 
 type UpdateMachineStatusReq struct {
-	MachineID string `json:"machine_id"`
-	Amount    int    `json:"amount"`
+	MachineID string `json:"machine_id" example:"machine-1000001"`
+	Amount    int    `json:"amount" example:"1"`
 }
 
 type MachineStatusResp struct {
 	MachineID  string `json:"machine_id"`
-	Name       string `bson:"name"`
+	Name       string `json:"name"`
 	WaitingPPL int    `json:"waiting_ppl"`
-	Category   string `bson:"category"`
+	Category   string `json:"category"`
 }
 
 // @Summary Get Machine Status Given Gym ID
