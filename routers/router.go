@@ -2,6 +2,7 @@ package routers
 
 import (
 	"SADBackend/controllers"
+	v1 "SADBackend/controllers/v1"
 	_ "SADBackend/docs"
 	"strings"
 
@@ -41,5 +42,12 @@ func InitRouters() *gin.Engine {
 	// swag
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.GET("/heartBeat", controllers.HeartBeat)
+	apiV1 := router.Group("/api/v1")
+	{
+		gymAPI := apiV1.Group("/gym")
+		{
+			gymAPI.GET("/list", v1.GetGymList)
+		}
+	}
 	return router
 }

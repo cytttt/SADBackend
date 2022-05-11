@@ -1,7 +1,49 @@
 package v1
 
-import "github.com/gin-gonic/gin"
+import (
+	"SADBackend/constant"
+	"SADBackend/model"
+	"SADBackend/pkg/mongodb"
+	"context"
+	"net/http"
 
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
+)
+
+type GetGymListRequest struct {
+	BranchGymID string `json:"branch_gym_id"`
+	Name        string `json:"name"`
+	Status      string `json:"status"`
+}
+
+// @Summary Get Gym List
+// @Tags Gym
+// @Success 200 {object} constant.Response
+// @Failure 500 {object} constant.Response
+// @Router /api/v1/gym/list [get]
 func GetGymList(c *gin.Context) {
-
+	cursor, err := mongodb.GymCollection.Find(context.Background(), bson.M{})
+	if err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, nil)
+		return
+	}
+	var gyms []model.BranchGym
+	if err := cursor.All(context.TODO(), &gyms); err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, nil)
+		return
+	}
+	var results []GetGymListRequest
+	for _, gym := range gyms {
+		status := "uncrowed"
+		if float64(gym.CurrentNumberPeople) > float64(gym.Info.ClientNumberLimit)*0.8 {
+			status = "crowded"
+		}
+		results = append(results, GetGymListRequest{
+			BranchGymID: gym.BranchGymID,
+			Name:        gym.Name,
+			Status:      status,
+		})
+	}
+	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, results)
 }

@@ -11,7 +11,7 @@ type BranchGym struct {
 	BranchGymID         string             `bson:"branch_gym_id"`
 	Name                string             `bson:"name"`
 	Info                BranchInfo         `bson:"info"`
-	CurrentNumberPeople int                `bson:"current_number_peopel"`
+	CurrentNumberPeople int                `bson:"current_number_people"`
 }
 
 type BranchInfo struct {
