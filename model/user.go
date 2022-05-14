@@ -32,9 +32,9 @@ type Staff struct {
 }
 
 type UserInfo struct {
-	Gender   string `bson:"gender"`
-	Phone    string `bson:"phone"`
-	Birthday string `bson:"birthday"`
+	Gender   string    `bson:"gender"`
+	Phone    string    `bson:"phone"`
+	Birthday time.Time `bson:"birthday"`
 }
 
 type BodyInfo struct {

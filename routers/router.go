@@ -53,6 +53,12 @@ func InitRouters() *gin.Engine {
 		{
 			machineAPI.PUT("/status", v1.UpdateMachineStatus)
 		}
+		userAPI := apiV1.Group("/user")
+		{
+			userAPI.POST("/login", v1.Login)
+			userAPI.GET("/info", v1.GetClientInfo)
+			userAPI.PUT("/info", v1.UpdateClientInfo)
+		}
 	}
 	return router
 }
