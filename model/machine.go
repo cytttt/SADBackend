@@ -20,8 +20,8 @@ type Machine struct {
 type PartCategory string
 
 const (
-	PART_Back   PartCategory = "client"
-	PART_Chest  PartCategory = "staff"
+	PART_Back   PartCategory = "back"
+	PART_Chest  PartCategory = "chest"
 	PART_Cardio PartCategory = "cardio"
 	PART_ABS    PartCategory = "abs"
 	PART_Leg    PartCategory = "leg"
