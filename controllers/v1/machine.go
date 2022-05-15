@@ -17,10 +17,10 @@ type UpdateMachineStatusReq struct {
 }
 
 type MachineStatusResp struct {
-	MachineID  string `json:"machine_id"`
-	Name       string `json:"name"`
-	WaitingPPL int    `json:"waiting_ppl"`
-	Category   string `json:"category"`
+	MachineID  string             `json:"machine_id"`
+	Name       string             `json:"name"`
+	WaitingPPL int                `json:"waiting_ppl"`
+	Category   model.PartCategory `json:"category"`
 }
 
 // @Summary Get Machine Status Given Gym ID
