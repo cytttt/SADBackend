@@ -14,6 +14,7 @@ import (
 type GetGymListResp struct {
 	BranchGymID string `json:"branch_gym_id"`
 	Name        string `json:"name"`
+	Address     string `json:"address"`
 	Status      string `json:"status"`
 }
 
@@ -43,6 +44,7 @@ func GetGymList(c *gin.Context) {
 		results = append(results, GetGymListResp{
 			BranchGymID: gym.BranchGymID,
 			Name:        gym.Name,
+			Address:     gym.Address,
 			Status:      status,
 		})
 	}
