@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -49,9 +50,18 @@ type ClientInfoResp struct {
 	BodyInfo         model.BodyInfo         `bson:"body_info" json:"body_info"`
 	Subscription     model.SubscriptionInfo `bson:"subscription" json:"subscription"`
 	Payment          model.PaymentMethod    `bson:"payment_method" json:"payment_method"`
-	AttendenceRecord []model.Attendence     `bosn:"attendence_record" josn:"attendence_record"`
+	AttendenceRecord []model.Attendence     `bson:"attendence_record" josn:"attendence_record"`
 	CreatedAt        time.Time              `bson:"created_at" json:"created_at" `
 	UpdatedAt        time.Time              `bson:"updated_at" json:"updated_at"`
+}
+
+type ReservationResp struct {
+	Category    string    `json:"category"`
+	MachineID   string    `json:"machine_id"`
+	MachineName string    `json:"machine_name"`
+	GymID       string    `json:"gym_id"`
+	GymName     string    `json:"gym_name"`
+	Date        time.Time `json:"date"`
 }
 
 // @Summary User Login
@@ -178,6 +188,96 @@ func UpdateClientInfo(c *gin.Context) {
 		return
 	}
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, clientInfo)
+}
+
+// @Summary Get Client Reservations
+// @Produce json
+// @Tags Client
+// @Param account path string true "account e.g. meowmeow123"
+// @Success 200 {object} constant.Response
+// @Failure 500 {object} constant.Response
+// @Router /api/v1/user/reservation/{account} [get]
+func GetReservation(c *gin.Context) {
+	account := c.Param("account")
+	loc := time.FixedZone("Asia/Taipei", int((8 * time.Hour).Seconds()))
+
+	// matchStage := bson.D{
+	// 	{"$match", bson.D{
+	// 		{"user_id", bson.D{{"$eq", account}}},
+	// 		{"start_at", bson.D{{"$gte", time.Now().In(loc)}}},
+	// 	}},
+	// }
+	matchStage := bson.M{
+		"$match": bson.M{
+			"user_id":  bson.M{"$eq": account},
+			"start_at": bson.M{"$gte": time.Now().In(loc)},
+		},
+	}
+	// lookupStage1 := bson.D{
+	// 	{"$lookup", bson.D{
+	// 		{"from", "machine"},
+	// 		{"localField", "machine_id"},
+	// 		{"foreignField", "machine_id"},
+	// 		{"as", "machines"},
+	// 	}},
+	// }
+	lookupStage1 := bson.M{
+		"$lookup": bson.M{
+			"from":         "machine",
+			"localField":   "machine_id",
+			"foreignField": "machine_id",
+			"as":           "machines",
+		},
+	}
+	// lookupStage2 := bson.D{
+	// 	{"$lookup", bson.D{
+	// 		{"from", "gym"},
+	// 		{"localField", "machines.0.gym_id"},
+	// 		{"foreignField", "branch_gym_id"},
+	// 		{"as", "gyms"},
+	// 	}},
+	// }
+	lookupStage2 := bson.M{
+		"$lookup": bson.M{
+			"from":         "gym",
+			"localField":   "machines.0.gym_id",
+			"foreignField": "branch_gym_id",
+			"as":           "gyms",
+		},
+	}
+	pip := []bson.M{matchStage, lookupStage1, lookupStage2}
+	cursor, err := mongodb.ReservationCollection.Aggregate(context.Background(), pip)
+	if err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
+		return
+	}
+	var results []struct {
+		ID          primitive.ObjectID `bson:"_id"`
+		UserID      string             `bson:"user_id"`
+		MachineID   string             `bson:"machine_id"`
+		Category    model.PartCategory `bson:"category"`
+		MachineName string             `bson:"machine_name"`
+		StartAt     time.Time          `bson:"start_at"`
+		Expired     bool               `bson:"expired"`
+		Gyms        []model.BranchGym  `bson:"gyms"`
+		Machines    []model.Machine    `bson:"machines"`
+	}
+	if err := cursor.All(context.TODO(), &results); err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
+		return
+	}
+	var res []ReservationResp
+	for _, i := range results {
+		res = append(res, ReservationResp{
+			MachineID:   i.MachineID,
+			Category:    string(i.Category),
+			MachineName: i.MachineName,
+			GymID:       i.Gyms[0].BranchGymID,
+			GymName:     i.Gyms[0].Name,
+			Date:        i.StartAt,
+		})
+	}
+	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, res)
 }
 
 func validEmail(email string) bool {

@@ -59,7 +59,9 @@ func InitRouters() *gin.Engine {
 			userAPI.POST("/login", v1.Login)
 			userAPI.GET("/info", v1.GetClientInfo)
 			userAPI.PUT("/info", v1.UpdateClientInfo)
+			userAPI.GET("/reservation/:account", v1.GetReservation)
 		}
+		// apiV1.GET("/test", v1.TTTTT)
 	}
 	return router
 }
