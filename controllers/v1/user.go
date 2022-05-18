@@ -143,6 +143,24 @@ func GetClientInfo(c *gin.Context) {
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, clientInfo)
 }
 
+// @Summary Get Client Info
+// @Produce json
+// @Tags Client
+// @Param account path string true "account e.g. meowmeow123"
+// @Success 200 {object} constant.Response
+// @Failure 500 {object} constant.Response
+// @Router /api/v1/user/stat/{account} [get]
+func GetClientStat(c *gin.Context) {
+	userID := c.Param("account")
+	var client model.Client
+	err := mongodb.ClientCollection.FindOne(context.Background(), bson.M{"user_id": userID}).Decode(&client)
+	if err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_NOT_FOUND, gin.H{"error": err.Error()})
+		return
+	}
+	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, client.Statistics)
+}
+
 // @Summary Update Client info
 // @Produce json
 // @Tags Client
@@ -197,30 +215,16 @@ func UpdateClientInfo(c *gin.Context) {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/reservation/{account} [get]
-func GetReservation(c *gin.Context) {
+func GetClientReservation(c *gin.Context) {
 	account := c.Param("account")
 	loc := time.FixedZone("Asia/Taipei", int((8 * time.Hour).Seconds()))
 
-	// matchStage := bson.D{
-	// 	{"$match", bson.D{
-	// 		{"user_id", bson.D{{"$eq", account}}},
-	// 		{"start_at", bson.D{{"$gte", time.Now().In(loc)}}},
-	// 	}},
-	// }
 	matchStage := bson.M{
 		"$match": bson.M{
 			"user_id":  bson.M{"$eq": account},
 			"start_at": bson.M{"$gte": time.Now().In(loc)},
 		},
 	}
-	// lookupStage1 := bson.D{
-	// 	{"$lookup", bson.D{
-	// 		{"from", "machine"},
-	// 		{"localField", "machine_id"},
-	// 		{"foreignField", "machine_id"},
-	// 		{"as", "machines"},
-	// 	}},
-	// }
 	lookupStage1 := bson.M{
 		"$lookup": bson.M{
 			"from":         "machine",
@@ -229,14 +233,6 @@ func GetReservation(c *gin.Context) {
 			"as":           "machines",
 		},
 	}
-	// lookupStage2 := bson.D{
-	// 	{"$lookup", bson.D{
-	// 		{"from", "gym"},
-	// 		{"localField", "machines.0.gym_id"},
-	// 		{"foreignField", "branch_gym_id"},
-	// 		{"as", "gyms"},
-	// 	}},
-	// }
 	lookupStage2 := bson.M{
 		"$lookup": bson.M{
 			"from":         "gym",

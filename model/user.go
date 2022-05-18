@@ -16,7 +16,8 @@ type Client struct {
 	BodyInfo         BodyInfo           `bson:"body_info"`
 	Subscription     SubscriptionInfo   `bson:"subscription"`
 	Payment          PaymentMethod      `bson:"payment_method"`
-	AttendenceRecord []Attendence       `bosn:"attendence_record"`
+	AttendenceRecord []Attendence       `bson:"attendence_record"`
+	Statistics       Stat               `bson:"statistics"`
 	CreatedAt        time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt        time.Time          `bson:"updated_at" json:"updated_at"`
 }
@@ -55,4 +56,11 @@ type PaymentMethod struct {
 type Attendence struct {
 	Enter    time.Time `bson:"enter"`
 	StayTime int       `bson:"stay_time"` // in seconds
+}
+
+type Stat struct {
+	StayTime   float64      `bson:"stay_time" json:"stay_time"`
+	Calories   int          `bson:"calories" json:"calories"`
+	MostTrain  PartCategory `bson:"most_train" json:"most_train"`
+	LeastTrain PartCategory `bson:"least_train" json:"least_train"`
 }
