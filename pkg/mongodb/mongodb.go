@@ -21,6 +21,7 @@ var StaffCollection *mongo.Collection
 var ReservationCollection *mongo.Collection
 var GymCollection *mongo.Collection
 var MachineCollection *mongo.Collection
+var AttendanceCollection *mongo.Collection
 
 func Init() {
 
@@ -41,6 +42,7 @@ func Init() {
 	ReservationCollection = DB.Collection("reservation")
 	GymCollection = DB.Collection("gym")
 	MachineCollection = DB.Collection("machine")
+	AttendanceCollection = DB.Collection("attendance")
 
 	log.Printf("[info] MongoDB initialization is done")
 }

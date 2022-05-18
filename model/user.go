@@ -7,19 +7,18 @@ import (
 )
 
 type Client struct {
-	ID               primitive.ObjectID `bson:"_id"`
-	UserID           string             `bson:"user_id"`
-	Name             string             `bson:"name"`
-	Email            string             `bson:"email"`
-	Password         string             `bson:"password"`
-	PersonalInfo     UserInfo           `bson:"personal_info"`
-	BodyInfo         BodyInfo           `bson:"body_info"`
-	Subscription     SubscriptionInfo   `bson:"subscription"`
-	Payment          PaymentMethod      `bson:"payment_method"`
-	AttendenceRecord []Attendence       `bson:"attendence_record"`
-	Statistics       Stat               `bson:"statistics"`
-	CreatedAt        time.Time          `bson:"created_at" json:"created_at"`
-	UpdatedAt        time.Time          `bson:"updated_at" json:"updated_at"`
+	ID           primitive.ObjectID `bson:"_id"`
+	UserID       string             `bson:"user_id"`
+	Name         string             `bson:"name"`
+	Email        string             `bson:"email"`
+	Password     string             `bson:"password"`
+	PersonalInfo UserInfo           `bson:"personal_info"`
+	BodyInfo     BodyInfo           `bson:"body_info"`
+	Subscription SubscriptionInfo   `bson:"subscription"`
+	Payment      PaymentMethod      `bson:"payment_method"`
+	Statistics   Stat               `bson:"statistics"`
+	CreatedAt    time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt    time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 type Staff struct {
@@ -51,11 +50,6 @@ type SubscriptionInfo struct {
 type PaymentMethod struct {
 	PayType string `bson:"pay_type"`
 	Account string `bson:"account"`
-}
-
-type Attendence struct {
-	Enter    time.Time `bson:"enter"`
-	StayTime int       `bson:"stay_time"` // in seconds
 }
 
 type Stat struct {

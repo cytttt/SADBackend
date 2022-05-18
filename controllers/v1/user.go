@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/mail"
+	"sort"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -43,16 +44,15 @@ type UpdateUserInfoReq struct {
 	Height  float64 `json:"height" example:"180.13"`
 }
 type ClientInfoResp struct {
-	UserID           string                 `bson:"user_id" json:"account"`
-	Name             string                 `bson:"name" json:"name"`
-	Email            string                 `bson:"email" json:"email"`
-	PersonalInfo     model.UserInfo         `bson:"personal_info" json:"personal_info"`
-	BodyInfo         model.BodyInfo         `bson:"body_info" json:"body_info"`
-	Subscription     model.SubscriptionInfo `bson:"subscription" json:"subscription"`
-	Payment          model.PaymentMethod    `bson:"payment_method" json:"payment_method"`
-	AttendenceRecord []model.Attendence     `bson:"attendence_record" josn:"attendence_record"`
-	CreatedAt        time.Time              `bson:"created_at" json:"created_at" `
-	UpdatedAt        time.Time              `bson:"updated_at" json:"updated_at"`
+	UserID       string                 `bson:"user_id" json:"account"`
+	Name         string                 `bson:"name" json:"name"`
+	Email        string                 `bson:"email" json:"email"`
+	PersonalInfo model.UserInfo         `bson:"personal_info" json:"personal_info"`
+	BodyInfo     model.BodyInfo         `bson:"body_info" json:"body_info"`
+	Subscription model.SubscriptionInfo `bson:"subscription" json:"subscription"`
+	Payment      model.PaymentMethod    `bson:"payment_method" json:"payment_method"`
+	CreatedAt    time.Time              `bson:"created_at" json:"created_at" `
+	UpdatedAt    time.Time              `bson:"updated_at" json:"updated_at"`
 }
 
 type ReservationResp struct {
@@ -62,6 +62,12 @@ type ReservationResp struct {
 	GymID       string    `json:"gym_id"`
 	GymName     string    `json:"gym_name"`
 	Date        time.Time `json:"date"`
+}
+
+type CompanyStatResp struct {
+	Date        string  `json:"date"`
+	Attendance  int     `json:"attendance_count"`
+	AvgStayTime float32 `json:"avg_stay_hour"`
 }
 
 // @Summary User Login
@@ -266,11 +272,69 @@ func GetClientReservation(c *gin.Context) {
 	for _, i := range results {
 		res = append(res, ReservationResp{
 			MachineID:   i.MachineID,
-			Category:    string(i.Category),
-			MachineName: i.MachineName,
+			Category:    string(i.Machines[0].Category),
+			MachineName: i.Machines[0].Name,
 			GymID:       i.Gyms[0].BranchGymID,
 			GymName:     i.Gyms[0].Name,
 			Date:        i.StartAt,
+		})
+	}
+	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, res)
+}
+
+// @Summary Get Company Stat
+// @Produce json
+// @Tags Staff
+// @Success 200 {object} constant.Response
+// @Failure 500 {object} constant.Response
+// @Router /api/v1/user/staff/stat [get]
+func GetCompanyStat(c *gin.Context) {
+	// 理論上 loc should be passed
+	loc := time.FixedZone("Asia/Taipei", int((8 * time.Hour).Seconds()))
+	cur := time.Now().In(loc)
+	y, m, d := cur.Date()
+	ub := time.Date(y, m, d, 0, 0, 0, 0, loc)
+	lb := ub.AddDate(0, 0, -7)
+	matchStage := bson.M{
+		"$match": bson.M{
+			"enter": bson.M{"$gte": lb, "$lt": ub},
+		},
+	}
+	groupStage := bson.M{
+		"$group": bson.M{
+			"_id": bson.M{
+				"$dateToString": bson.M{
+					"format": "%Y/%m/%d",
+					"date":   "$enter",
+				}},
+			"attendance_count": bson.M{"$sum": 1},
+			"avg_stay_second":  bson.M{"$avg": "$stay_time"},
+		},
+	}
+	pip := []bson.M{matchStage, groupStage}
+	cursor, err := mongodb.AttendanceCollection.Aggregate(context.Background(), pip)
+	if err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
+		return
+	}
+	var results []struct {
+		Date            string  `bson:"_id"`
+		AttendanceCount int     `bson:"attendance_count"`
+		AvgStaySecond   float32 `bson:"avg_stay_second"`
+	}
+	if err := cursor.All(context.TODO(), &results); err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
+		return
+	}
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Date < results[j].Date
+	})
+	var res []CompanyStatResp
+	for _, i := range results {
+		res = append(res, CompanyStatResp{
+			Date:        i.Date,
+			Attendance:  i.AttendanceCount,
+			AvgStayTime: i.AvgStaySecond / 3600,
 		})
 	}
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, res)
