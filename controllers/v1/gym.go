@@ -37,7 +37,7 @@ func GetGymList(c *gin.Context) {
 	}
 	var results []GetGymListResp
 	for _, gym := range gyms {
-		status := "uncrowed"
+		status := "uncrowded"
 		if float64(gym.CurrentNumberPeople) > float64(gym.Info.ClientNumberLimit)*0.8 {
 			status = "crowded"
 		}

@@ -5,6 +5,7 @@ import (
 	"SADBackend/model"
 	"SADBackend/pkg/mongodb"
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,10 @@ type UpdateMachineStatusReq struct {
 	Amount    int    `json:"amount" example:"1"`
 }
 
+type MachineStatusWrapperResp struct {
+	Category model.PartCategory  `json:"category"`
+	Machines []MachineStatusResp `json:"machines"`
+}
 type MachineStatusResp struct {
 	MachineID  string             `json:"machine_id"`
 	Name       string             `json:"name"`
@@ -26,39 +31,15 @@ type MachineStatusResp struct {
 // @Summary Get Machine Status Given Gym ID
 // @Produce json
 // @Tags All
-// @param gym_id query string true "gym id e.g. branch-1000001"
-// @param sorted_by query string true "sorted by  method e.g. default, category"
+// @param gym_id query string true "Gym id e.g. branch-1000001"
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/gym/machine [get]
 func GetMachineList(c *gin.Context) {
 	gymID := c.Query("gym_id")
-	sorted_by := c.Query("sorted_by")
 	err, results := findAllMachines(gymID)
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-		return
-	}
-	if sorted_by == "category" {
-		sorted_results := make(map[model.PartCategory][]MachineStatusResp)
-		for _, m := range results {
-			if m.Category == model.PART_ABS {
-				sorted_results[model.PART_ABS] = append(sorted_results[model.PART_ABS], m)
-			} else if m.Category == model.PART_Arm {
-				sorted_results[model.PART_Arm] = append(sorted_results[model.PART_Arm], m)
-			} else if m.Category == model.PART_Back {
-				sorted_results[model.PART_Back] = append(sorted_results[model.PART_Back], m)
-			} else if m.Category == model.PART_Cardio {
-				sorted_results[model.PART_Cardio] = append(sorted_results[model.PART_Cardio], m)
-			} else if m.Category == model.PART_Chest {
-				sorted_results[model.PART_Chest] = append(sorted_results[model.PART_Chest], m)
-			} else if m.Category == model.PART_Leg {
-				sorted_results[model.PART_Leg] = append(sorted_results[model.PART_Leg], m)
-			} else if m.Category == model.PArt_Hips {
-				sorted_results[model.PArt_Hips] = append(sorted_results[model.PArt_Hips], m)
-			}
-		}
-		constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, sorted_results)
 		return
 	}
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, results)
@@ -114,4 +95,49 @@ func findAllMachines(gymID string) (error, []MachineStatusResp) {
 		})
 	}
 	return nil, results
+}
+
+// @Summary Get Machine Status Given Gym ID Sorted by Category
+// @Produce json
+// @Tags All
+// @Param gym_id path string true "Gym id e.g. branch-1000001"
+// @Success 200 {object} constant.Response
+// @Failure 500 {object} constant.Response
+// @Router /api/v1/gym/machine/category/{gym_id} [get]
+func GetMachineListByCategory(c *gin.Context) {
+	log.Println("m")
+	gymID := c.Param("gym_id")
+	err, results := findAllMachines(gymID)
+	if err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
+		return
+	}
+	categoryMapping := [...]model.PartCategory{model.PART_Back, model.PART_Chest, model.PART_Cardio, model.PART_ABS, model.PART_Leg, model.PART_Arm, model.PArt_Hips}
+
+	sortedResults := make(map[model.PartCategory][]MachineStatusResp)
+	for _, m := range results {
+		if m.Category == model.PART_ABS {
+			sortedResults[model.PART_ABS] = append(sortedResults[model.PART_ABS], m)
+		} else if m.Category == model.PART_Arm {
+			sortedResults[model.PART_Arm] = append(sortedResults[model.PART_Arm], m)
+		} else if m.Category == model.PART_Back {
+			sortedResults[model.PART_Back] = append(sortedResults[model.PART_Back], m)
+		} else if m.Category == model.PART_Cardio {
+			sortedResults[model.PART_Cardio] = append(sortedResults[model.PART_Cardio], m)
+		} else if m.Category == model.PART_Chest {
+			sortedResults[model.PART_Chest] = append(sortedResults[model.PART_Chest], m)
+		} else if m.Category == model.PART_Leg {
+			sortedResults[model.PART_Leg] = append(sortedResults[model.PART_Leg], m)
+		} else if m.Category == model.PArt_Hips {
+			sortedResults[model.PArt_Hips] = append(sortedResults[model.PArt_Hips], m)
+		}
+	}
+	var finalResults []MachineStatusWrapperResp
+	for _, category := range categoryMapping {
+		finalResults = append(finalResults, MachineStatusWrapperResp{
+			Category: category,
+			Machines: sortedResults[category],
+		})
+	}
+	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, finalResults)
 }

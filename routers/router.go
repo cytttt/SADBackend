@@ -48,6 +48,7 @@ func InitRouters() *gin.Engine {
 		{
 			gymAPI.GET("/list", v1.GetGymList)
 			gymAPI.GET("/machine", v1.GetMachineList)
+			gymAPI.GET("/machine/category/:gym_id", v1.GetMachineListByCategory)
 		}
 		machineAPI := apiV1.Group("/machine")
 		{
