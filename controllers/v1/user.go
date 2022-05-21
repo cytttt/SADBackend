@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"log"
 	"net/http"
 	"net/mail"
 	"sort"
@@ -68,6 +69,69 @@ type CompanyStatResp struct {
 	Date        string  `json:"date"`
 	Attendance  int     `json:"attendance_count"`
 	AvgStayTime float32 `json:"avg_stay_hour"`
+}
+
+type SignupReq struct {
+	Account  string  `json:"account" binding:"required" example:"meowmeow789"`
+	Password string  `json:"password" binding:"required" example:"meowmoew22"`
+	Name     string  `json:"name" example:"Antony Cho"`
+	Email    string  `json:"email" example:"meowantony@gmail.com"`
+	Gender   string  `json:"gender" example:"male"`
+	Phone    string  `json:"phone" example:"0912345678"`
+	Birthday string  `json:"birthday" example:"2006/01/02"`
+	Height   float32 `json:"height" example:"188.87"`
+	Weight   float32 `json:"weight" example:"69.69"`
+}
+
+// @Summary Client Signup
+// @Produce json
+// @Tags Client
+// @Param signupCredentials body SignupReq true "account, password, name, email, gender, phone, birthday, height, weight"
+// @Success 200 {object} constant.Response
+// @Failure 500 {object} constant.Response
+// @Router /api/v1/user/signup [post]
+func Signup(c *gin.Context) {
+	var signupReq SignupReq
+	if err := c.ShouldBindJSON(&signupReq); err != nil {
+		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
+		return
+	}
+	// check duplicated account
+	var existUser model.Client
+	if err := mongodb.ClientCollection.FindOne(context.Background(), bson.M{"user_id": signupReq.Account}).Decode(&existUser); err == nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_EXISTS, nil)
+		return
+	}
+	passwdCrypto := fmt.Sprintf("%x", sha256.Sum256([]byte(signupReq.Password)))
+	birthdayTime, err := string2Time(signupReq.Birthday)
+	if err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
+		return
+	}
+	newClient := model.Client{
+		ID:       primitive.NewObjectID(),
+		UserID:   signupReq.Account,
+		Name:     signupReq.Name,
+		Email:    signupReq.Email,
+		Password: passwdCrypto,
+		PersonalInfo: model.UserInfo{
+			Gender:   signupReq.Gender,
+			Phone:    signupReq.Phone,
+			Birthday: *birthdayTime,
+		},
+		BodyInfo: model.BodyInfo{
+			Weight: float64(signupReq.Weight),
+			Height: float64(signupReq.Height),
+		},
+	}
+	if _, err := mongodb.ClientCollection.InsertOne(context.Background(), newClient); err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, nil)
+		if err := deleteDocument(signupReq.Account); err != nil {
+			log.Printf("Error: %s", err)
+		}
+		return
+	}
+	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, nil)
 }
 
 // @Summary User Login
@@ -343,4 +407,21 @@ func GetCompanyStat(c *gin.Context) {
 func validEmail(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
+}
+
+func string2Time(timeStr string) (*time.Time, error) {
+	offset := int((8 * time.Hour).Seconds())
+	loc := time.FixedZone("Asia/Taipei", offset)
+	newTime, err := time.ParseInLocation("2006/01/02", timeStr, loc)
+	if err != nil {
+		return nil, err
+	}
+	return &newTime, err
+}
+
+func deleteDocument(account string) error {
+	if _, err := mongodb.ClientCollection.DeleteOne(context.Background(), bson.M{"user_id": account}); err != nil {
+		return err
+	}
+	return nil
 }

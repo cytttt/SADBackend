@@ -57,6 +57,7 @@ func InitRouters() *gin.Engine {
 		userAPI := apiV1.Group("/user")
 		{
 			userAPI.POST("/login", v1.Login)
+			userAPI.POST("/signup", v1.Signup)
 			userAPI.GET("/info", v1.GetClientInfo)
 			userAPI.PUT("/info", v1.UpdateClientInfo)
 			userAPI.GET("/reservation/:account", v1.GetClientReservation)

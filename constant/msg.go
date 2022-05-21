@@ -6,6 +6,7 @@ var MsgFlags = map[int]string{
 	INVALID_PARAMS:                     "Invalid params error",
 	ERROR:                              "Fail",
 	ERROR_USER_NOT_FOUND:               "User not exist",
+	ERROR_USER_EXISTS:                  "User already exist",
 	ERROR_INCORRECT_PASSWORD:           "Incorrect password",
 	ERROR_AUTH_CHECK_TOKEN_FAIL:        "Auth token check fail",
 	ERROR_AUTH_CHECK_TOKEN_TIMEOUT:     "Auth token expired",
