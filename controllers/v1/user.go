@@ -33,16 +33,19 @@ type LoginResp struct {
 }
 
 type UpdateUserInfoReq struct {
-	Account string  `json:"account" example:"meowmeow123"` // use to identify user
-	Name    string  `json:"name" example:"testMeowClient"`
-	Email   string  `json:"email" binding:"email" example:"meowtestclient@gmail.com"`
-	Gender  string  `json:"gender" example:"male"`
-	Phone   string  `json:"phone" example:"0919886886"`
-	Year    int     `json:"year" example:"2001"`
-	Month   int     `json:"month" example:"5"`
-	Day     int     `json:"day" example:"29"`
-	Weight  float64 `json:"weihgt" example:"69.69"`
-	Height  float64 `json:"height" example:"180.13"`
+	Account        string          `json:"account" example:"meowmeow123"` // use to identify user
+	Name           string          `json:"name" example:"testMeowClient"`
+	Email          string          `json:"email" binding:"email" example:"meowtestclient@gmail.com"`
+	Gender         string          `json:"gender" example:"male"`
+	Phone          string          `json:"phone" example:"0919886886"`
+	Year           int             `json:"year" example:"2001"`
+	Month          int             `json:"month" example:"5"`
+	Day            int             `json:"day" example:"29"`
+	Weight         float64         `json:"weight" example:"69.69"`
+	Height         float64         `json:"height" example:"180.13"`
+	PayType        string          `json:"pay_type" example:"visa"`
+	PaymentAccount string          `json:"payment_plan" example:"1234123412341234"`
+	Plan           model.PlanLevel `json:"plan" example:"normal"`
 }
 type ClientInfoResp struct {
 	UserID       string                 `bson:"user_id" json:"account"`
@@ -260,14 +263,17 @@ func UpdateClientInfo(c *gin.Context) {
 	filter := bson.M{"user_id": updateReq.Account}
 	update := bson.M{
 		"$set": bson.M{
-			"name":                   updateReq.Name,
-			"email":                  updateReq.Email,
-			"personal_info.gender":   updateReq.Gender,
-			"personal_info.phone":    updateReq.Phone,
-			"personal_info.birthday": time.Date(updateReq.Year, time.Month(updateReq.Month), updateReq.Day, 0, 0, 0, 0, loc),
-			"body_info.weight":       updateReq.Weight,
-			"body_info.height":       updateReq.Height,
-			"updated_at":             time.Now().In(loc),
+			"name":                    updateReq.Name,
+			"email":                   updateReq.Email,
+			"personal_info.gender":    updateReq.Gender,
+			"personal_info.phone":     updateReq.Phone,
+			"personal_info.birthday":  time.Date(updateReq.Year, time.Month(updateReq.Month), updateReq.Day, 0, 0, 0, 0, loc),
+			"body_info.weight":        updateReq.Weight,
+			"body_info.height":        updateReq.Height,
+			"subscription":            updateReq.Plan,
+			"payment_method.pay_type": updateReq.PayType,
+			"payment_method.account":  updateReq.PaymentAccount,
+			"updated_at":              time.Now().In(loc),
 		},
 	}
 	var clientInfo ClientInfoResp

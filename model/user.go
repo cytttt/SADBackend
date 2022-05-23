@@ -43,7 +43,7 @@ type BodyInfo struct {
 }
 
 type SubscriptionInfo struct {
-	Plan      string    `bson:"plan"`
+	Plan      PlanLevel `bson:"plan"`
 	ExpiredAt time.Time `bson:"expired_at"`
 }
 
@@ -58,3 +58,10 @@ type Stat struct {
 	MostTrain  PartCategory `bson:"most_train" json:"most_train"`
 	LeastTrain PartCategory `bson:"least_train" json:"least_train"`
 }
+
+type PlanLevel string
+
+const (
+	PLAN_Normal  PlanLevel = "normal"
+	PLAN_Premium PlanLevel = "premium"
+)
