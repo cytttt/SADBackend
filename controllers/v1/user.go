@@ -270,7 +270,7 @@ func UpdateClientInfo(c *gin.Context) {
 			"personal_info.birthday":  time.Date(updateReq.Year, time.Month(updateReq.Month), updateReq.Day, 0, 0, 0, 0, loc),
 			"body_info.weight":        updateReq.Weight,
 			"body_info.height":        updateReq.Height,
-			"subscription":            updateReq.Plan,
+			"subscription.plan":       updateReq.Plan,
 			"payment_method.pay_type": updateReq.PayType,
 			"payment_method.account":  updateReq.PaymentAccount,
 			"updated_at":              time.Now().In(loc),
