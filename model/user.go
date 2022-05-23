@@ -62,6 +62,7 @@ type Stat struct {
 type PlanLevel string
 
 const (
-	PLAN_Normal  PlanLevel = "normal"
-	PLAN_Premium PlanLevel = "premium"
+	PLAN_Basic    PlanLevel = "Basic"
+	PLAN_Standard PlanLevel = "Standard"
+	PLAN_Premium  PlanLevel = "Premium"
 )
