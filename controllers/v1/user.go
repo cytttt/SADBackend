@@ -247,6 +247,7 @@ func UpdateClientInfo(c *gin.Context) {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
 		return
 	}
+	log.Print(updateReq)
 	// check use exist or not
 	var tmp model.Client
 	err := mongodb.ClientCollection.FindOne(context.Background(), bson.M{"user_id": updateReq.Account}).Decode(&tmp)
