@@ -248,8 +248,10 @@ func UpdateClientInfo(c *gin.Context) {
 		return
 	}
 	// check use exist or not
-	err := mongodb.ClientCollection.FindOne(context.Background(), bson.M{"user_id": updateReq.Account}).Decode(&struct{}{})
+	var tmp model.Client
+	err := mongodb.ClientCollection.FindOne(context.Background(), bson.M{"user_id": updateReq.Account}).Decode(&tmp)
 	if err != nil {
+		log.Print("ckpt1")
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
@@ -278,9 +280,11 @@ func UpdateClientInfo(c *gin.Context) {
 	}
 	var clientInfo ClientInfoResp
 	if err := mongodb.ClientCollection.FindOneAndUpdate(context.Background(), filter, update, opt).Decode(&clientInfo); err != nil {
+		log.Print("ckpt2")
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
+
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, clientInfo)
 }
 
