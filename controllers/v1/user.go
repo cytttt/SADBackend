@@ -35,7 +35,7 @@ type LoginResp struct {
 type UpdateUserInfoReq struct {
 	Account        string          `json:"account" example:"meowmeow123"` // use to identify user
 	Name           string          `json:"name" example:"testMeowClient"`
-	Email          string          `json:"email" example:"meowtestclient@gmail.com"`
+	Email          string          `json:"email"  binding:"email" example:"meowtestclient@gmail.com"`
 	Gender         string          `json:"gender" example:"male"`
 	Phone          string          `json:"phone" example:"0919886886"`
 	Year           int             `json:"year" example:"2001"`
@@ -247,12 +247,9 @@ func UpdateClientInfo(c *gin.Context) {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
 		return
 	}
-	log.Print(updateReq)
 	// check use exist or not
-	var tmp model.Client
-	err := mongodb.ClientCollection.FindOne(context.Background(), bson.M{"user_id": updateReq.Account}).Decode(&tmp)
+	err := mongodb.ClientCollection.FindOne(context.Background(), bson.M{"user_id": updateReq.Account}).Decode(&struct{}{})
 	if err != nil {
-		log.Print("ckpt1")
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
@@ -281,7 +278,6 @@ func UpdateClientInfo(c *gin.Context) {
 	}
 	var clientInfo ClientInfoResp
 	if err := mongodb.ClientCollection.FindOneAndUpdate(context.Background(), filter, update, opt).Decode(&clientInfo); err != nil {
-		log.Print("ckpt2")
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
