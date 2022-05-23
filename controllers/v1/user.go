@@ -35,7 +35,7 @@ type LoginResp struct {
 type UpdateUserInfoReq struct {
 	Account        string          `json:"account" example:"meowmeow123"` // use to identify user
 	Name           string          `json:"name" example:"testMeowClient"`
-	Email          string          `json:"email" binding:"email" example:"meowtestclient@gmail.com"`
+	Email          string          `json:"email" example:"meowtestclient@gmail.com"`
 	Gender         string          `json:"gender" example:"male"`
 	Phone          string          `json:"phone" example:"0919886886"`
 	Year           int             `json:"year" example:"2001"`
