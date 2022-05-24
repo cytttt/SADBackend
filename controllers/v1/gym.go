@@ -12,10 +12,11 @@ import (
 )
 
 type GetGymListResp struct {
-	BranchGymID string `json:"branch_gym_id"`
-	Name        string `json:"name"`
-	Address     string `json:"address"`
-	Status      string `json:"status"`
+	BranchGymID      string            `json:"branch_gym_id"`
+	Name             string            `json:"name"`
+	Address          string            `json:"address"`
+	Status           string            `json:"status"`
+	AvailableMachine model.MachineList `json:"available_machine"`
 }
 
 // @Summary Get Gym List
@@ -42,10 +43,11 @@ func GetGymList(c *gin.Context) {
 			status = "crowded"
 		}
 		results = append(results, GetGymListResp{
-			BranchGymID: gym.BranchGymID,
-			Name:        gym.Name,
-			Address:     gym.Address,
-			Status:      status,
+			BranchGymID:      gym.BranchGymID,
+			Name:             gym.Name,
+			Address:          gym.Address,
+			Status:           status,
+			AvailableMachine: gym.AvailableMachine,
 		})
 	}
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, results)

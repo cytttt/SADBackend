@@ -112,24 +112,24 @@ func GetMachineListByCategory(c *gin.Context) {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
-	categoryMapping := [...]model.PartCategory{model.PART_Back, model.PART_Chest, model.PART_Cardio, model.PART_ABS, model.PART_Leg, model.PART_Arm, model.PArt_Hips}
+	categoryMapping := [...]model.PartCategory{model.PART_BACK, model.PART_CHEST, model.PART_CARDIO, model.PART_ABS, model.PART_LEG, model.PART_ARM, model.PART_HIPS}
 
 	sortedResults := make(map[model.PartCategory][]MachineStatusResp)
 	for _, m := range results {
 		if m.Category == model.PART_ABS {
 			sortedResults[model.PART_ABS] = append(sortedResults[model.PART_ABS], m)
-		} else if m.Category == model.PART_Arm {
-			sortedResults[model.PART_Arm] = append(sortedResults[model.PART_Arm], m)
-		} else if m.Category == model.PART_Back {
-			sortedResults[model.PART_Back] = append(sortedResults[model.PART_Back], m)
-		} else if m.Category == model.PART_Cardio {
-			sortedResults[model.PART_Cardio] = append(sortedResults[model.PART_Cardio], m)
-		} else if m.Category == model.PART_Chest {
-			sortedResults[model.PART_Chest] = append(sortedResults[model.PART_Chest], m)
-		} else if m.Category == model.PART_Leg {
-			sortedResults[model.PART_Leg] = append(sortedResults[model.PART_Leg], m)
-		} else if m.Category == model.PArt_Hips {
-			sortedResults[model.PArt_Hips] = append(sortedResults[model.PArt_Hips], m)
+		} else if m.Category == model.PART_ARM {
+			sortedResults[model.PART_ARM] = append(sortedResults[model.PART_ARM], m)
+		} else if m.Category == model.PART_BACK {
+			sortedResults[model.PART_BACK] = append(sortedResults[model.PART_BACK], m)
+		} else if m.Category == model.PART_CARDIO {
+			sortedResults[model.PART_CARDIO] = append(sortedResults[model.PART_CARDIO], m)
+		} else if m.Category == model.PART_CHEST {
+			sortedResults[model.PART_CHEST] = append(sortedResults[model.PART_CHEST], m)
+		} else if m.Category == model.PART_LEG {
+			sortedResults[model.PART_LEG] = append(sortedResults[model.PART_LEG], m)
+		} else if m.Category == model.PART_HIPS {
+			sortedResults[model.PART_HIPS] = append(sortedResults[model.PART_HIPS], m)
 		}
 	}
 	var finalResults []MachineStatusWrapperResp
