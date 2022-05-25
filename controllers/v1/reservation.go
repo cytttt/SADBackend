@@ -136,6 +136,12 @@ func MakeReservation(c *gin.Context) {
 		return
 	}
 	start := startBase.Add(time.Duration(startHour.Hour()) * time.Hour)
+	// check exist
+	err = mongodb.ReservationCollection.FindOne(context.Background(), bson.M{"user_id": mrReq.UserID, "start_at": start}).Decode(&struct{}{})
+	if err == nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": "already has reservation at the same time"})
+		return
+	}
 	newReservation := model.Reservation{
 		ID:        primitive.NewObjectID(),
 		UserID:    mrReq.UserID,
