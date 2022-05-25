@@ -191,6 +191,10 @@ func GetAvailableTime(c *gin.Context) {
 	for _, i := range machines {
 		machineIDs = append(machineIDs, i.MachineID)
 	}
+	if len(machineIDs) == 0 {
+		constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, machineIDs)
+		return
+	}
 	lb, ub, err := getTimeRangeBound(period, date)
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
