@@ -106,7 +106,7 @@ func Signup(c *gin.Context) {
 		return
 	}
 	passwdCrypto := fmt.Sprintf("%x", sha256.Sum256([]byte(signupReq.Password)))
-	birthdayTime, err := string2Time(signupReq.Birthday)
+	birthdayTime, err := string2Time(signupReq.Birthday, "2006/01/02")
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
@@ -128,7 +128,7 @@ func Signup(c *gin.Context) {
 		},
 	}
 	if _, err := mongodb.ClientCollection.InsertOne(context.Background(), newClient); err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, nil)
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		if err := deleteDocument(signupReq.Account); err != nil {
 			log.Printf("Error: %s", err)
 		}
@@ -285,74 +285,6 @@ func UpdateClientInfo(c *gin.Context) {
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, clientInfo)
 }
 
-// @Summary Get Client Reservations
-// @Produce json
-// @Tags Client
-// @Param account path string true "account e.g. meowmeow123"
-// @Success 200 {object} constant.Response
-// @Failure 500 {object} constant.Response
-// @Router /api/v1/user/reservation/{account} [get]
-func GetClientReservation(c *gin.Context) {
-	account := c.Param("account")
-	loc := time.FixedZone("Asia/Taipei", int((8 * time.Hour).Seconds()))
-
-	matchStage := bson.M{
-		"$match": bson.M{
-			"user_id":  bson.M{"$eq": account},
-			"start_at": bson.M{"$gte": time.Now().In(loc)},
-		},
-	}
-	lookupStage1 := bson.M{
-		"$lookup": bson.M{
-			"from":         "machine",
-			"localField":   "machine_id",
-			"foreignField": "machine_id",
-			"as":           "machines",
-		},
-	}
-	lookupStage2 := bson.M{
-		"$lookup": bson.M{
-			"from":         "gym",
-			"localField":   "machines.0.gym_id",
-			"foreignField": "branch_gym_id",
-			"as":           "gyms",
-		},
-	}
-	pip := []bson.M{matchStage, lookupStage1, lookupStage2}
-	cursor, err := mongodb.ReservationCollection.Aggregate(context.Background(), pip)
-	if err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-		return
-	}
-	var results []struct {
-		ID          primitive.ObjectID `bson:"_id"`
-		UserID      string             `bson:"user_id"`
-		MachineID   string             `bson:"machine_id"`
-		Category    model.PartCategory `bson:"category"`
-		MachineName string             `bson:"machine_name"`
-		StartAt     time.Time          `bson:"start_at"`
-		Expired     bool               `bson:"expired"`
-		Gyms        []model.BranchGym  `bson:"gyms"`
-		Machines    []model.Machine    `bson:"machines"`
-	}
-	if err := cursor.All(context.TODO(), &results); err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-		return
-	}
-	var res []ReservationResp
-	for _, i := range results {
-		res = append(res, ReservationResp{
-			MachineID:   i.MachineID,
-			Category:    string(i.Machines[0].Category),
-			MachineName: i.Machines[0].Name,
-			GymID:       i.Gyms[0].BranchGymID,
-			GymName:     i.Gyms[0].Name,
-			Date:        i.StartAt,
-		})
-	}
-	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, res)
-}
-
 // @Summary Get Company Stat
 // @Produce json
 // @Tags Staff
@@ -416,10 +348,10 @@ func validEmail(email string) bool {
 	return err == nil
 }
 
-func string2Time(timeStr string) (*time.Time, error) {
+func string2Time(timeStr, format string) (*time.Time, error) {
 	offset := int((8 * time.Hour).Seconds())
 	loc := time.FixedZone("Asia/Taipei", offset)
-	newTime, err := time.ParseInLocation("2006/01/02", timeStr, loc)
+	newTime, err := time.ParseInLocation(format, timeStr, loc)
 	if err != nil {
 		return nil, err
 	}

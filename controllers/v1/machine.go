@@ -76,7 +76,7 @@ func UpdateMachineStatus(c *gin.Context) {
 }
 
 func findAllMachines(gymID string) (error, []MachineStatusResp) {
-	cursor, err := mongodb.MachineCollection.Find(context.Background(), bson.M{"gym_id": gymID})
+	cursor, err := mongodb.MachineCollection.Find(context.Background(), bson.M{"gym_id": gymID, "reservation_only": false})
 	if err != nil {
 		return err, nil
 	}
