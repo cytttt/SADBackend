@@ -136,6 +136,7 @@ func MakeReservation(c *gin.Context) {
 		return
 	}
 	start := startBase.Add(time.Duration(startHour.Hour()) * time.Hour)
+	start = start.Add(time.Duration(startHour.Minute()) * time.Minute)
 	// check exist
 	err = mongodb.ReservationCollection.FindOne(context.Background(), bson.M{"user_id": mrReq.UserID, "start_at": start}).Decode(&struct{}{})
 	if err == nil {
