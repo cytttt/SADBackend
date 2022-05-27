@@ -61,6 +61,11 @@ func GetClientReservation(c *gin.Context) {
 			"start_at": bson.M{"$gte": time.Now().In(loc)},
 		},
 	}
+	sortStage := bson.M{
+		"$sort": bson.M{
+			"start_at": 1,
+		},
+	}
 	lookupStage1 := bson.M{
 		"$lookup": bson.M{
 			"from":         "machine",
@@ -77,7 +82,7 @@ func GetClientReservation(c *gin.Context) {
 			"as":           "gyms",
 		},
 	}
-	pip := []bson.M{matchStage, lookupStage1, lookupStage2}
+	pip := []bson.M{matchStage, sortStage, lookupStage1, lookupStage2}
 	cursor, err := mongodb.ReservationCollection.Aggregate(context.Background(), pip)
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
@@ -108,6 +113,9 @@ func GetClientReservation(c *gin.Context) {
 			GymName:     i.Gyms[0].Name,
 			Date:        i.StartAt,
 		})
+		if len(res) == 4 {
+			break
+		}
 	}
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, res)
 }
