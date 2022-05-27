@@ -35,7 +35,7 @@ func TTTTT(c *gin.Context) {
 	// 	constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 	// 	return
 	// }
-	err := repo.Client.Exist("meowmeow123", struct{}{})
+	err := repo.Client.Exist("meowmeow123", &struct{}{})
 	if err == nil {
 		log.Println("nice")
 	}

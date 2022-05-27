@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -33,6 +34,26 @@ func PreprocessSignupInfo(req model.SignupReq) (*model.Client, error) {
 		},
 	}
 	return &newClient, nil
+}
+
+func PreprocessUpdateInfo(req model.UpdateUserInfoReq) bson.M {
+	loc := time.FixedZone("Asia/Taipei", int((8 * time.Hour).Seconds()))
+	update := bson.M{
+		"$set": bson.M{
+			"name":                    req.Name,
+			"email":                   req.Email,
+			"personal_info.gender":    req.Gender,
+			"personal_info.phone":     req.Phone,
+			"personal_info.birthday":  time.Date(req.Year, time.Month(req.Month), req.Day, 0, 0, 0, 0, loc),
+			"body_info.weight":        req.Weight,
+			"body_info.height":        req.Height,
+			"subscription.plan":       req.Plan,
+			"payment_method.pay_type": req.PayType,
+			"payment_method.account":  req.PaymentAccount,
+			"updated_at":              time.Now().In(loc),
+		},
+	}
+	return update
 }
 
 func string2Time(timeStr, format string) (*time.Time, error) {

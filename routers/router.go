@@ -67,7 +67,7 @@ func InitRouters() *gin.Engine {
 			userAPI.PUT("/info", v1.UpdateClientInfo)
 
 		}
-		apiV1.GET("/test", v1.TTTTT)
+		// apiV1.GET("/test", v1.TTTTT)
 	}
 	return router
 }

@@ -14,7 +14,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type LoginCred struct {
@@ -187,42 +186,21 @@ func UpdateClientInfo(c *gin.Context) {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
 		return
 	}
-	// check use exist or not
-	err := mongodb.ClientCollection.FindOne(context.Background(), bson.M{"user_id": updateReq.Account}).Decode(&struct{}{})
+
+	err := repo.Client.Exist(updateReq.Account, &struct{}{})
 	if err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-		return
-	}
-	// update
-	//opt := &options.UpdateOptions{}
-	//opt.SetUpsert(true)
-	opt := options.FindOneAndUpdate()
-	opt.SetUpsert(true)
-	opt.SetReturnDocument(options.After)
-	loc := time.FixedZone("Asia/Taipei", int((8 * time.Hour).Seconds()))
-	filter := bson.M{"user_id": updateReq.Account}
-	update := bson.M{
-		"$set": bson.M{
-			"name":                    updateReq.Name,
-			"email":                   updateReq.Email,
-			"personal_info.gender":    updateReq.Gender,
-			"personal_info.phone":     updateReq.Phone,
-			"personal_info.birthday":  time.Date(updateReq.Year, time.Month(updateReq.Month), updateReq.Day, 0, 0, 0, 0, loc),
-			"body_info.weight":        updateReq.Weight,
-			"body_info.height":        updateReq.Height,
-			"subscription.plan":       updateReq.Plan,
-			"payment_method.pay_type": updateReq.PayType,
-			"payment_method.account":  updateReq.PaymentAccount,
-			"updated_at":              time.Now().In(loc),
-		},
-	}
-	var clientInfo ClientInfoResp
-	if err := mongodb.ClientCollection.FindOneAndUpdate(context.Background(), filter, update, opt).Decode(&clientInfo); err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_NOT_FOUND, gin.H{"error": err.Error()})
 		return
 	}
 
-	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, clientInfo)
+	update := service.PreprocessUpdateInfo(updateReq)
+
+	var clientInfo *ClientInfoResp
+	if err := repo.Client.UpdateClientInfo(updateReq.Account, update, &clientInfo); err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
+		return
+	}
+	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, *clientInfo)
 }
 
 // @Summary Get Company Stat
@@ -296,11 +274,4 @@ func string2Time(timeStr, format string) (*time.Time, error) {
 		return nil, err
 	}
 	return &newTime, err
-}
-
-func deleteDocument(account string) error {
-	if _, err := mongodb.ClientCollection.DeleteOne(context.Background(), bson.M{"user_id": account}); err != nil {
-		return err
-	}
-	return nil
 }
