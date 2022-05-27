@@ -1,6 +1,7 @@
 package service
 
 import (
+	"SADBackend/constant"
 	"SADBackend/model"
 	"crypto/sha256"
 	"fmt"
@@ -10,7 +11,7 @@ import (
 )
 
 func PreprocessSignupInfo(req model.SignupReq) (*model.Client, error) {
-	passwdCrypto := fmt.Sprintf("%x", sha256.Sum256([]byte(req.Password)))
+	pwdCrypto := fmt.Sprintf("%x", sha256.Sum256([]byte(req.Password)))
 	birthdayTime, err := string2Time(req.Birthday, "2006/01/02")
 	if err != nil {
 		return nil, err
@@ -20,7 +21,7 @@ func PreprocessSignupInfo(req model.SignupReq) (*model.Client, error) {
 		UserID:   req.Account,
 		Name:     req.Name,
 		Email:    req.Email,
-		Password: passwdCrypto,
+		Password: pwdCrypto,
 		PersonalInfo: model.UserInfo{
 			Gender:   req.Gender,
 			Phone:    req.Phone,
@@ -42,4 +43,12 @@ func string2Time(timeStr, format string) (*time.Time, error) {
 		return nil, err
 	}
 	return &newTime, err
+}
+
+func VerifyPwd(req, ref string) error {
+	pwdCrypto := fmt.Sprintf("%x", sha256.Sum256([]byte(req)))
+	if pwdCrypto != ref {
+		return constant.NewError(constant.ERROR_INCORRECT_PASSWORD)
+	}
+	return nil
 }

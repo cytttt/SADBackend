@@ -11,5 +11,5 @@ type mongoReservationRepo struct {
 }
 
 func newReservationRepository(db *mongo.Database) repo.ReservationRepo {
-	return &mongoClientRepo{collection: db.Collection("reservation")}
+	return &mongoReservationRepo{collection: db.Collection("reservation")}
 }

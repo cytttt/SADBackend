@@ -11,5 +11,5 @@ type mongoMachineRepo struct {
 }
 
 func newMachineRepository(db *mongo.Database) repo.MachineRepo {
-	return &mongoClientRepo{collection: db.Collection("machine")}
+	return &mongoMachineRepo{collection: db.Collection("machine")}
 }

@@ -13,6 +13,7 @@ type ClientRepo interface {
 }
 
 type StaffRepo interface {
+	Exist(userID string, result interface{}) error
 }
 
 type ReservationRepo interface {

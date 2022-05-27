@@ -11,5 +11,5 @@ type mongoGymRepo struct {
 }
 
 func newGymRepository(db *mongo.Database) repo.GymRepo {
-	return &mongoClientRepo{collection: db.Collection("gym")}
+	return &mongoGymRepo{collection: db.Collection("gym")}
 }

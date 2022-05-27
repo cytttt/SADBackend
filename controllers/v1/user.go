@@ -7,8 +7,6 @@ import (
 	"SADBackend/pkg/mongodb"
 	"SADBackend/repo"
 	"context"
-	"crypto/sha256"
-	"fmt"
 	"net/http"
 	"net/mail"
 	"sort"
@@ -20,7 +18,7 @@ import (
 )
 
 type LoginCred struct {
-	Account  string            `json:"account" binding:"required" example:"meowmeow123"`
+	UserID   string            `json:"account" binding:"required" example:"meowmeow123"`
 	Password string            `json:"password" binding:"required" example:"meowmoew22"`
 	UserRole constant.UserRole `json:"user_role" binding:"required" example:"client"`
 }
@@ -94,7 +92,7 @@ func Signup(c *gin.Context) {
 // @Summary User Login
 // @Produce json
 // @Tags User
-// @Param loginCredentials  body LoginCred true "account/email, password, userRole("client","staff")"
+// @Param loginCredentials  body LoginCred true "account only, password, userRole("client","staff")"
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/login [post]
@@ -104,22 +102,13 @@ func Login(c *gin.Context) {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
 		return
 	}
-	filter := bson.M{}
-	if validEmail(loginCred.Account) {
-		filter = bson.M{"email": loginCred.Account}
-	} else {
-		filter = bson.M{"user_id": loginCred.Account}
-	}
-
 	if loginCred.UserRole == constant.USER_ROLE_Client {
-		var client model.Client
-		passwdCrypto := fmt.Sprintf("%x", sha256.Sum256([]byte(loginCred.Password)))
-		err := mongodb.ClientCollection.FindOne(context.Background(), filter).Decode(&client)
-		if err != nil {
-			constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_NOT_FOUND, nil)
+		var client *model.Client
+		if err := repo.Client.Exist(loginCred.UserID, &client); err != nil {
+			constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_NOT_FOUND, gin.H{"error": err.Error()})
 			return
 		}
-		if passwdCrypto != client.Password {
+		if err := service.VerifyPwd(loginCred.Password, client.Password); err != nil {
 			constant.ResponseWithData(c, http.StatusOK, constant.ERROR_INCORRECT_PASSWORD, nil)
 			return
 		}
@@ -130,14 +119,12 @@ func Login(c *gin.Context) {
 		})
 		return
 	} else if loginCred.UserRole == constant.USER_ROLE_Staff {
-		var staff model.Staff
-		passwdCrypto := fmt.Sprintf("%x", sha256.Sum256([]byte(loginCred.Password)))
-		err := mongodb.StaffCollection.FindOne(context.Background(), filter).Decode(&staff)
-		if err != nil {
-			constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_NOT_FOUND, nil)
+		var staff *model.Staff
+		if err := repo.Staff.Exist(loginCred.UserID, &staff); err != nil {
+			constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_NOT_FOUND, gin.H{"error": err.Error()})
 			return
 		}
-		if passwdCrypto != staff.Password {
+		if err := service.VerifyPwd(loginCred.Password, staff.Password); err != nil {
 			constant.ResponseWithData(c, http.StatusOK, constant.ERROR_INCORRECT_PASSWORD, nil)
 			return
 		}
@@ -149,7 +136,7 @@ func Login(c *gin.Context) {
 		})
 		return
 	}
-	constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, "invalid user role")
+	constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": "invalid user role"})
 }
 
 // @Summary Get Client Info
@@ -161,13 +148,14 @@ func Login(c *gin.Context) {
 // @Router /api/v1/user/info [get]
 func GetClientInfo(c *gin.Context) {
 	userID := c.Query("account")
-	var clientInfo ClientInfoResp
-	err := mongodb.ClientCollection.FindOne(context.Background(), bson.M{"user_id": userID}).Decode(&clientInfo)
-	if err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_NOT_FOUND, gin.H{"error": err.Error()})
+
+	var clientInfo *ClientInfoResp
+	if err := repo.Client.Exist(userID, &clientInfo); err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_EXISTS, gin.H{"error": err.Error()})
 		return
 	}
-	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, clientInfo)
+
+	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, *clientInfo)
 }
 
 // @Summary Get Client Info
