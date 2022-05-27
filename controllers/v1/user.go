@@ -2,12 +2,13 @@ package v1
 
 import (
 	"SADBackend/constant"
+	"SADBackend/controllers/service"
 	"SADBackend/model"
 	"SADBackend/pkg/mongodb"
+	"SADBackend/repo"
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"log"
 	"net/http"
 	"net/mail"
 	"sort"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -32,21 +32,6 @@ type LoginResp struct {
 	Level    string            `json:"level"`
 }
 
-type UpdateUserInfoReq struct {
-	Account        string          `json:"account" example:"meowmeow123"` // use to identify user
-	Name           string          `json:"name" example:"testMeowClient"`
-	Email          string          `json:"email"  binding:"email" example:"meowtestclient@gmail.com"`
-	Gender         string          `json:"gender" example:"male"`
-	Phone          string          `json:"phone" example:"0919886886"`
-	Year           int             `json:"year" example:"2001"`
-	Month          int             `json:"month" example:"5"`
-	Day            int             `json:"day" example:"29"`
-	Weight         float64         `json:"weight" example:"69.69"`
-	Height         float64         `json:"height" example:"180.13"`
-	PayType        string          `json:"pay_type" example:"visa"`
-	PaymentAccount string          `json:"payment_plan" example:"1234123412341234"`
-	Plan           model.PlanLevel `json:"plan" example:"normal"`
-}
 type ClientInfoResp struct {
 	UserID       string                 `bson:"user_id" json:"account"`
 	Name         string                 `bson:"name" json:"name"`
@@ -74,18 +59,6 @@ type CompanyStatResp struct {
 	AvgStayTime float32 `json:"avg_stay_hour"`
 }
 
-type SignupReq struct {
-	Account  string  `json:"account" binding:"required" example:"meowmeow789"`
-	Password string  `json:"password" binding:"required" example:"meowmoew22"`
-	Name     string  `json:"name" example:"Antony Cho"`
-	Email    string  `json:"email" example:"meowantony@gmail.com"`
-	Gender   string  `json:"gender" example:"male"`
-	Phone    string  `json:"phone" example:"0912345678"`
-	Birthday string  `json:"birthday" example:"2006/01/02"`
-	Height   float32 `json:"height" example:"188.87"`
-	Weight   float32 `json:"weight" example:"69.69"`
-}
-
 // @Summary Client Signup
 // @Produce json
 // @Tags Client
@@ -94,44 +67,25 @@ type SignupReq struct {
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/signup [post]
 func Signup(c *gin.Context) {
-	var signupReq SignupReq
+	var signupReq model.SignupReq
 	if err := c.ShouldBindJSON(&signupReq); err != nil {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
 		return
 	}
-	// check duplicated account
-	var existUser model.Client
-	if err := mongodb.ClientCollection.FindOne(context.Background(), bson.M{"user_id": signupReq.Account}).Decode(&existUser); err == nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_EXISTS, nil)
+
+	if err := repo.Client.Exist(signupReq.Account, struct{}{}); err == nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_EXISTS, gin.H{"error": err.Error()})
 		return
 	}
-	passwdCrypto := fmt.Sprintf("%x", sha256.Sum256([]byte(signupReq.Password)))
-	birthdayTime, err := string2Time(signupReq.Birthday, "2006/01/02")
+
+	newClient, err := service.PreprocessSignupInfo(signupReq)
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
-	newClient := model.Client{
-		ID:       primitive.NewObjectID(),
-		UserID:   signupReq.Account,
-		Name:     signupReq.Name,
-		Email:    signupReq.Email,
-		Password: passwdCrypto,
-		PersonalInfo: model.UserInfo{
-			Gender:   signupReq.Gender,
-			Phone:    signupReq.Phone,
-			Birthday: *birthdayTime,
-		},
-		BodyInfo: model.BodyInfo{
-			Weight: float64(signupReq.Weight),
-			Height: float64(signupReq.Height),
-		},
-	}
-	if _, err := mongodb.ClientCollection.InsertOne(context.Background(), newClient); err != nil {
+
+	if err := repo.Client.Signup(*newClient); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-		if err := deleteDocument(signupReq.Account); err != nil {
-			log.Printf("Error: %s", err)
-		}
 		return
 	}
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, nil)
@@ -242,7 +196,7 @@ func GetClientStat(c *gin.Context) {
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/info [put]
 func UpdateClientInfo(c *gin.Context) {
-	var updateReq UpdateUserInfoReq
+	var updateReq model.UpdateUserInfoReq
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
 		return

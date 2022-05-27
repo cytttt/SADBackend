@@ -1,6 +1,7 @@
 package mongodb
 
 import (
+	"SADBackend/repo"
 	"context"
 	"log"
 
@@ -43,7 +44,13 @@ func Init() {
 	GymCollection = DB.Collection("gym")
 	MachineCollection = DB.Collection("machine")
 	AttendanceCollection = DB.Collection("attendance")
-
+	// refactor
+	repo.Client = newClientRepository(DB)
+	repo.Staff = newStaffRepository(DB)
+	repo.Gym = newGymRepository(DB)
+	repo.Machine = newMachineRepository(DB)
+	repo.Reservation = newReservationRepository(DB)
+	repo.Attendance = newAttendanceRepository(DB)
 	log.Printf("[info] MongoDB initialization is done")
 }
 

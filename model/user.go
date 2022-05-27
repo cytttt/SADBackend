@@ -66,3 +66,31 @@ const (
 	PLAN_Standard PlanLevel = "Standard"
 	PLAN_Premium  PlanLevel = "Premium"
 )
+
+type SignupReq struct {
+	Account  string  `json:"account" binding:"required" example:"meowmeow789"`
+	Password string  `json:"password" binding:"required" example:"meowmoew22"`
+	Name     string  `json:"name" example:"Antony Cho"`
+	Email    string  `json:"email" example:"meowantony@gmail.com"`
+	Gender   string  `json:"gender" example:"male"`
+	Phone    string  `json:"phone" example:"0912345678"`
+	Birthday string  `json:"birthday" example:"2006/01/02"`
+	Height   float32 `json:"height" example:"188.87"`
+	Weight   float32 `json:"weight" example:"69.69"`
+}
+
+type UpdateUserInfoReq struct {
+	Account        string    `json:"account" example:"meowmeow123"` // use to identify user
+	Name           string    `json:"name" example:"testMeowClient"`
+	Email          string    `json:"email"  binding:"email" example:"meowtestclient@gmail.com"`
+	Gender         string    `json:"gender" example:"male"`
+	Phone          string    `json:"phone" example:"0919886886"`
+	Year           int       `json:"year" example:"2001"`
+	Month          int       `json:"month" example:"5"`
+	Day            int       `json:"day" example:"29"`
+	Weight         float64   `json:"weight" example:"69.69"`
+	Height         float64   `json:"height" example:"180.13"`
+	PayType        string    `json:"pay_type" example:"visa"`
+	PaymentAccount string    `json:"payment_plan" example:"1234123412341234"`
+	Plan           PlanLevel `json:"plan" example:"normal"`
+}

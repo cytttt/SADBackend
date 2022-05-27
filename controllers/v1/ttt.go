@@ -4,7 +4,9 @@ import (
 	"SADBackend/constant"
 	"SADBackend/model"
 	"SADBackend/pkg/mongodb"
+	"SADBackend/repo"
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -29,9 +31,25 @@ func TTTTT(c *gin.Context) {
 	// 	constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 	// 	return
 	// }
-	if err := addAvailableMachine(); err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-		return
+	// if err := addAvailableMachine(); err != nil {
+	// 	constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
+	// 	return
+	// }
+	err := repo.Client.Exist("meowmeow123", struct{}{})
+	if err == nil {
+		log.Println("nice")
+	}
+	var a *model.Client
+	err = repo.Client.Exist("meowmeow123", &a)
+	if err == nil {
+		log.Println("nice2")
+		log.Println(*a)
+	}
+	var b *ClientInfoResp
+	err = repo.Client.Exist("meowmeow123", &b)
+	if err == nil {
+		log.Println("nice2")
+		log.Println(*b)
 	}
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, nil)
 }
