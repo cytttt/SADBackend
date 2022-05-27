@@ -60,7 +60,7 @@ type CompanyStatResp struct {
 // @Summary Client Signup
 // @Produce json
 // @Tags Client
-// @Param signupCredentials body SignupReq true "account, password, name, email, gender, phone, birthday, height, weight"
+// @Param signupCredentials body model.SignupReq true "account, password, name, email, gender, phone, birthday, height, weight"
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/signup [post]
@@ -154,7 +154,6 @@ func GetClientInfo(c *gin.Context) {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_EXISTS, gin.H{"error": err.Error()})
 		return
 	}
-
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, *clientInfo)
 }
 
@@ -167,10 +166,9 @@ func GetClientInfo(c *gin.Context) {
 // @Router /api/v1/user/stat/{account} [get]
 func GetClientStat(c *gin.Context) {
 	userID := c.Param("account")
-	var client model.Client
-	err := mongodb.ClientCollection.FindOne(context.Background(), bson.M{"user_id": userID}).Decode(&client)
-	if err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_NOT_FOUND, gin.H{"error": err.Error()})
+	var client *model.Client
+	if err := repo.Client.Exist(userID, &client); err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_EXISTS, gin.H{"error": err.Error()})
 		return
 	}
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, client.Statistics)
@@ -179,7 +177,7 @@ func GetClientStat(c *gin.Context) {
 // @Summary Update Client info
 // @Produce json
 // @Tags Client
-// @Param UpdateClientInfo body UpdateUserInfoReq true "account, ..."
+// @Param UpdateClientInfo body model.UpdateUserInfoReq true "account, ..."
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/info [put]
