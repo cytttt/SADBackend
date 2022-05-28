@@ -6,18 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Machine struct {
-	ID              primitive.ObjectID `bson:"_id"`
-	MachineID       string             `bson:"machine_id"`
-	Name            string             `bson:"name"`
-	Category        PartCategory       `bson:"category"`
-	Gym             string             `bson:"gym_id"`
-	WaitingPPL      int                `bson:"waiting_ppl"`
-	BoughtAt        time.Time          `bson:"bought_at"`
-	MaintainedAt    time.Time          `bson:"maintained_at"`
-	ReservationOnly bool               `bson:"reservation_only"`
-}
-
 type PartCategory string
 
 const (
@@ -48,3 +36,27 @@ const (
 	MACHINE_PEC_DECK    MachineName = "pec deck"    // chest
 	MACHINE_CHEST_PRESS MachineName = "chest press" // chest
 )
+
+type Machine struct {
+	ID              primitive.ObjectID `bson:"_id"`
+	MachineID       string             `bson:"machine_id"`
+	Name            string             `bson:"name"`
+	Category        PartCategory       `bson:"category"`
+	Gym             string             `bson:"gym_id"`
+	WaitingPPL      int                `bson:"waiting_ppl"`
+	BoughtAt        time.Time          `bson:"bought_at"`
+	MaintainedAt    time.Time          `bson:"maintained_at"`
+	ReservationOnly bool               `bson:"reservation_only"`
+}
+
+type MachineStatusResp struct {
+	MachineID  string       `json:"machine_id"`
+	Name       string       `json:"name"`
+	WaitingPPL int          `json:"waiting_ppl"`
+	Category   PartCategory `json:"category"`
+}
+
+type MachineStatusWrapperResp struct {
+	Category PartCategory        `json:"category"`
+	Machines []MachineStatusResp `json:"machines"`
+}

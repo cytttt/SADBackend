@@ -7,6 +7,7 @@ import (
 	"SADBackend/repo"
 	"context"
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -27,10 +28,10 @@ func TTTTT(c *gin.Context) {
 	// 	constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 	// 	return
 	// }
-	// if err := addStuffStat(); err != nil {
-	// 	constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	if err := addStuffStat(); err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
+		return
+	}
 	// if err := addAvailableMachine(); err != nil {
 	// 	constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 	// 	return
@@ -39,18 +40,18 @@ func TTTTT(c *gin.Context) {
 	if err == nil {
 		log.Println("nice")
 	}
-	var a *model.Client
-	err = repo.Client.Exist("meowmeow123", &a)
-	if err == nil {
-		log.Println("nice2")
-		log.Println(*a)
-	}
-	var b *ClientInfoResp
-	err = repo.Client.Exist("meowmeow123", &b)
-	if err == nil {
-		log.Println("nice2")
-		log.Println(*b)
-	}
+	// var a *model.Client
+	// err = repo.Client.Exist("meowmeow123", &a)
+	// if err == nil {
+	// 	log.Println("nice2")
+	// 	log.Println(*a)
+	// }
+	// var b *ClientInfoResp
+	// err = repo.Client.Exist("meowmeow123", &b)
+	// if err == nil {
+	// 	log.Println("nice2")
+	// 	log.Println(*b)
+	// }
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, nil)
 }
 
@@ -112,47 +113,47 @@ func addStuffStat() error {
 	cases := [...]model.Attendance{
 		{
 			Enter:    time.Now().In(loc).AddDate(0, 0, -1),
-			StayTime: 3600,
+			StayTime: 3600 + rand.Intn(10)*200,
 		},
 		{
 			Enter:    time.Now().In(loc).AddDate(0, 0, -2),
-			StayTime: 4800,
+			StayTime: 4800 + rand.Intn(10)*200,
 		},
 		{
 			Enter:    time.Now().In(loc).AddDate(0, 0, -3),
-			StayTime: 7200,
+			StayTime: 7200 + rand.Intn(10)*200,
 		},
 		{
 			Enter:    time.Now().In(loc).AddDate(0, 0, -4),
-			StayTime: 5600,
+			StayTime: 5600 + rand.Intn(10)*200,
 		},
 		{
 			Enter:    time.Now().In(loc).AddDate(0, 0, -5),
-			StayTime: 1800,
+			StayTime: 1800 + rand.Intn(10)*200,
 		},
 		{
 			Enter:    time.Now().In(loc).AddDate(0, 0, -6),
-			StayTime: 3800,
+			StayTime: 3800 + rand.Intn(10)*200,
 		},
 		{
 			Enter:    time.Now().In(loc).AddDate(0, 0, -7),
-			StayTime: 4400,
+			StayTime: 4400 + rand.Intn(10)*200,
 		},
 		{
 			Enter:    time.Now().In(loc).AddDate(0, 0, -2),
-			StayTime: 4200,
+			StayTime: 4200 + rand.Intn(10)*200,
 		},
 		{
 			Enter:    time.Now().In(loc).AddDate(0, 0, -4),
-			StayTime: 7200,
+			StayTime: 7200 + rand.Intn(10)*200,
 		},
 		{
 			Enter:    time.Now().In(loc).AddDate(0, 0, -6),
-			StayTime: 7200,
+			StayTime: 7200 + rand.Intn(10)*200,
 		},
 		{
 			Enter:    time.Now().In(loc).AddDate(0, 0, -7),
-			StayTime: 7200,
+			StayTime: 7200 + rand.Intn(10)*200,
 		},
 	}
 	for _, i := range cases {

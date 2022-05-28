@@ -2,6 +2,7 @@ package repo
 
 import (
 	"SADBackend/model"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -17,15 +18,24 @@ type StaffRepo interface {
 }
 
 type ReservationRepo interface {
+	Exist(userID string, startAt time.Time, result interface{}) error
+	GetReservation(userID string, results interface{}) error
+	MakeReservation(userID, machineID string, start time.Time) error
+	QueryExistReservation(machineIDs []string, lb, ub time.Time, results interface{}) error
 }
 
 type GymRepo interface {
+	GymList(results interface{}) error
 }
 
 type MachineRepo interface {
+	MachineList(gymID string, results interface{}) error
+	UpdateAmount(machineID string, amount int, result interface{}) error
+	GetAvailableMachines(gymID, machineName string, results interface{}) error
 }
 
 type AttendanceRepo interface {
+	CompanyStat7days(results interface{}) error
 }
 
 var Client ClientRepo

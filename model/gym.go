@@ -30,3 +30,11 @@ type MachineList struct {
 	HIPS   []MachineName `bson:"hips" json:"hips"`
 	LEG    []MachineName `bson:"leg" json:"leg"`
 }
+
+type GetGymListResp struct {
+	BranchGymID      string      `json:"branch_gym_id"`
+	Name             string      `json:"name"`
+	Address          string      `json:"address"`
+	Status           string      `json:"status"`
+	AvailableMachine MachineList `json:"available_machine"`
+}

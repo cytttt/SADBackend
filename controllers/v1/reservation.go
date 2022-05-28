@@ -2,19 +2,14 @@ package v1
 
 import (
 	"SADBackend/constant"
+	"SADBackend/controllers/service"
 	"SADBackend/model"
-	"SADBackend/pkg/mongodb"
-	"context"
+	"SADBackend/repo"
 	"fmt"
-	"math/rand"
 	"net/http"
-	"sort"
 	"time"
 
-	mapset "github.com/deckarep/golang-set"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // period defintion:
@@ -38,12 +33,6 @@ type MakeReservationReq struct {
 	Start     string `json:"start" example:"13:00"`
 }
 
-type GetAvailableTimeResp struct {
-	Start     string `json:"start"`
-	End       string `json:"end"`
-	MachineID string `json:"machine_id"`
-}
-
 // @Summary Get Client Reservations
 // @Produce json
 // @Tags Client
@@ -52,71 +41,15 @@ type GetAvailableTimeResp struct {
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/reservation/{account} [get]
 func GetClientReservation(c *gin.Context) {
-	account := c.Param("account")
-	loc := time.FixedZone("Asia/Taipei", int((8 * time.Hour).Seconds()))
+	userID := c.Param("account")
 
-	matchStage := bson.M{
-		"$match": bson.M{
-			"user_id":  bson.M{"$eq": account},
-			"start_at": bson.M{"$gte": time.Now().In(loc)},
-		},
-	}
-	sortStage := bson.M{
-		"$sort": bson.M{
-			"start_at": 1,
-		},
-	}
-	lookupStage1 := bson.M{
-		"$lookup": bson.M{
-			"from":         "machine",
-			"localField":   "machine_id",
-			"foreignField": "machine_id",
-			"as":           "machines",
-		},
-	}
-	lookupStage2 := bson.M{
-		"$lookup": bson.M{
-			"from":         "gym",
-			"localField":   "machines.0.gym_id",
-			"foreignField": "branch_gym_id",
-			"as":           "gyms",
-		},
-	}
-	pip := []bson.M{matchStage, sortStage, lookupStage1, lookupStage2}
-	cursor, err := mongodb.ReservationCollection.Aggregate(context.Background(), pip)
-	if err != nil {
+	var results []model.AggrReservationRes
+	if err := repo.Reservation.GetReservation(userID, &results); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
-	var results []struct {
-		ID          primitive.ObjectID `bson:"_id"`
-		UserID      string             `bson:"user_id"`
-		MachineID   string             `bson:"machine_id"`
-		Category    model.PartCategory `bson:"category"`
-		MachineName string             `bson:"machine_name"`
-		StartAt     time.Time          `bson:"start_at"`
-		Expired     bool               `bson:"expired"`
-		Gyms        []model.BranchGym  `bson:"gyms"`
-		Machines    []model.Machine    `bson:"machines"`
-	}
-	if err := cursor.All(context.TODO(), &results); err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-		return
-	}
-	var res []ReservationResp
-	for _, i := range results {
-		res = append(res, ReservationResp{
-			MachineID:   i.MachineID,
-			Category:    string(i.Machines[0].Category),
-			MachineName: i.Machines[0].Name,
-			GymID:       i.Gyms[0].BranchGymID,
-			GymName:     i.Gyms[0].Name,
-			Date:        i.StartAt,
-		})
-		if len(res) == 4 {
-			break
-		}
-	}
+	res, _ := service.FindFutureKReservation(results, 4)
+
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, res)
 }
 
@@ -133,34 +66,24 @@ func MakeReservation(c *gin.Context) {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
 		return
 	}
-	startBase, err := string2Time(mrReq.Date, "2006-01-02")
+
+	start, err := service.ComputeStartTime(mrReq.Date, mrReq.Start)
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
-	startHour, err := time.Parse("15:04", mrReq.Start)
-	if err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-		return
-	}
-	start := startBase.Add(time.Duration(startHour.Hour()) * time.Hour)
-	start = start.Add(time.Duration(startHour.Minute()) * time.Minute)
-	// check exist
-	err = mongodb.ReservationCollection.FindOne(context.Background(), bson.M{"user_id": mrReq.UserID, "start_at": start}).Decode(&struct{}{})
+
+	err = repo.Reservation.Exist(mrReq.UserID, start, &struct{}{})
 	if err == nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": "already has reservation at the same time"})
 		return
 	}
-	newReservation := model.Reservation{
-		ID:        primitive.NewObjectID(),
-		UserID:    mrReq.UserID,
-		MachineID: mrReq.MachineID,
-		StartAt:   start,
-	}
-	if _, err := mongodb.ReservationCollection.InsertOne(context.Background(), newReservation); err != nil {
+
+	if err := repo.Reservation.MakeReservation(mrReq.UserID, mrReq.MachineID, start); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
+
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, nil)
 }
 
@@ -181,62 +104,41 @@ func GetAvailableTime(c *gin.Context) {
 	userID := c.Query("account")
 	gymID := c.Query("branch_gym_id")
 	machinePrefix := c.Query("machine")
-	// find machines
-	machineFilter := bson.M{
-		"reservation_only": true,
-		"gym_id":           gymID,
-		"name": primitive.Regex{
-			Pattern: "^" + machinePrefix,
-			Options: "",
-		},
-	}
 
-	cursor, err := mongodb.MachineCollection.Find(context.Background(), machineFilter)
-	if err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-		return
-	}
 	var machines []model.Machine
-	if err := cursor.All(context.TODO(), &machines); err != nil {
+	if err := repo.Machine.GetAvailableMachines(gymID, machinePrefix, &machines); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
 	// find existing reservations
-	var machineIDs []string
-	for _, i := range machines {
-		machineIDs = append(machineIDs, i.MachineID)
+	machineIDs, err := service.FindAvailableMachine(gymID, machinePrefix)
+	if err != nil {
+		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
+		return
 	}
 	if len(machineIDs) == 0 {
 		constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, machineIDs)
 		return
 	}
+
 	lb, ub, err := getTimeRangeBound(period, date)
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
-	reservationFilter := bson.M{
-		"machine_id": bson.M{
-			"$in": machineIDs,
-		},
-		"start_at": bson.M{"$gte": lb, "$lt": ub},
-	}
-	cursor, err = mongodb.ReservationCollection.Find(context.Background(), reservationFilter)
-	if err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-		return
-	}
+
 	var reservations []model.Reservation
-	if err := cursor.All(context.TODO(), &reservations); err != nil {
+	if err := repo.Reservation.QueryExistReservation(machineIDs, *lb, *ub, &reservations); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
-	results, err := findResult_K(userID, reservations, machineIDs, *lb, *ub, 5)
+
+	res, err := service.FindKAvailabeTime(userID, reservations, machineIDs, *lb, *ub, 5)
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
-	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, results)
+	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, res)
 }
 
 func getTimeRangeBound(tr string, date string) (*time.Time, *time.Time, error) {
@@ -261,63 +163,4 @@ func getTimeRangeBound(tr string, date string) (*time.Time, *time.Time, error) {
 		return nil, nil, fmt.Errorf("unknown time range: %s", tr)
 	}
 	return &lb, &ub, nil
-}
-
-func findResult_K(userID string, res []model.Reservation, mID []string, lbd time.Time, ubd time.Time, k int) ([]GetAvailableTimeResp, error) {
-	var tmpAvailableTime []GetAvailableTimeResp
-	// setup map
-	loc := time.FixedZone("Asia/Taipei", int((8 * time.Hour).Seconds()))
-	reservationMap := make(map[string][]model.Reservation)
-	for _, r := range res {
-		tmpStr := r.StartAt.In(loc).Format("15:04")
-		reservationMap[tmpStr] = append(reservationMap[tmpStr], r)
-	}
-
-	for d := lbd; d.After(ubd) == false; d = d.Add(30 * time.Minute) {
-		st := d.Format("15:04")
-		ed := d.Add(30 * time.Minute).Format("15:04")
-		var mIDAtd []string // machine available at time d
-		// if the user has already  made reservation at the same time => continue
-		if _, ok := reservationMap[st]; ok {
-			reserveConflict := false
-			tmpSet := mapset.NewSet()
-			for _, r := range reservationMap[st] {
-				if r.UserID == userID {
-					reserveConflict = true
-					break
-				}
-				tmpSet.Add(r.MachineID)
-			}
-			if reserveConflict {
-				continue
-			}
-			for _, m := range mID {
-				if tmpSet.Contains(m) {
-					continue
-				}
-				mIDAtd = append(mIDAtd, m)
-			}
-		} else {
-			mIDAtd = append(mIDAtd, mID...)
-		}
-		tmpAvailableTime = append(tmpAvailableTime, GetAvailableTimeResp{
-			Start:     st,
-			End:       ed,
-			MachineID: mIDAtd[rand.Intn(len(mIDAtd))],
-		})
-	}
-	permutation := rand.Perm(len(tmpAvailableTime))[:Min(k, len(tmpAvailableTime))]
-	sort.Ints(permutation)
-	var AvailableTime []GetAvailableTimeResp
-	for _, p := range permutation {
-		AvailableTime = append(AvailableTime, tmpAvailableTime[p])
-	}
-	return AvailableTime, nil
-}
-
-func Min(x, y int) int {
-	if x > y {
-		return y
-	}
-	return x
 }
