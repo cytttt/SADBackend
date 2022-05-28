@@ -72,7 +72,7 @@ func addAvailableMachine() error {
 				"available_machine": tmpAvailableMachine,
 			},
 		}
-		_, err := mongodb.GymCollection.UpdateOne(context.Background(), bson.M{"branch_gym_id": i}, update, opt)
+		_, err := mongodb.MongoInstance.DB.Collection("gym").UpdateOne(context.Background(), bson.M{"branch_gym_id": i}, update, opt)
 		if err != nil {
 			return err
 		}
@@ -88,7 +88,7 @@ func addReservation() error {
 		MachineID: "machine-1000001",
 		StartAt:   time.Date(2023, time.Month(12), 10, 0, 0, 0, 0, loc),
 	}
-	_, err := mongodb.ReservationCollection.InsertOne(context.Background(), tmp)
+	_, err := mongodb.MongoInstance.DB.Collection("reservation").InsertOne(context.Background(), tmp)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func addReservation() error {
 		MostTrain:  model.PART_CARDIO,
 		LeastTrain: model.PART_ARM,
 	}}}
-	_, err = mongodb.ClientCollection.UpdateOne(context.Background(), filter, update)
+	_, err = mongodb.MongoInstance.DB.Collection("client").UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func addStuffStat() error {
 		},
 	}
 	for _, i := range cases {
-		_, err := mongodb.AttendanceCollection.InsertOne(context.Background(), i)
+		_, err := mongodb.MongoInstance.DB.Collection("attendance").InsertOne(context.Background(), i)
 		if err != nil {
 			return err
 		}

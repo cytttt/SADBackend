@@ -17,13 +17,6 @@ type MongoAccess struct {
 	DB     *mongo.Database
 }
 
-var ClientCollection *mongo.Collection
-var StaffCollection *mongo.Collection
-var ReservationCollection *mongo.Collection
-var GymCollection *mongo.Collection
-var MachineCollection *mongo.Collection
-var AttendanceCollection *mongo.Collection
-
 func Init() {
 
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(viper.GetString("MONGO_DB_CONNECTION")))
@@ -37,13 +30,6 @@ func Init() {
 		DB:     DB,
 	}
 
-	// Setup Collection
-	ClientCollection = DB.Collection("client")
-	StaffCollection = DB.Collection("staff")
-	ReservationCollection = DB.Collection("reservation")
-	GymCollection = DB.Collection("gym")
-	MachineCollection = DB.Collection("machine")
-	AttendanceCollection = DB.Collection("attendance")
 	// refactor v1
 	// repo.Client = newClientRepository(DB)
 	// repo.Staff = newStaffRepository(DB)
@@ -51,6 +37,7 @@ func Init() {
 	// repo.Machine = newMachineRepository(DB)
 	// repo.Reservation = newReservationRepository(DB)
 	// repo.Attendance = newAttendanceRepository(DB)
+
 	// refactor v2
 	repo.RepoInstance.Client = newClientRepository(DB)
 	repo.RepoInstance.Staff = newStaffRepository(DB)

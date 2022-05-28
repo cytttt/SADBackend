@@ -6,7 +6,6 @@ import (
 	"SADBackend/model"
 	"SADBackend/repo"
 	"net/http"
-	"net/mail"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -199,11 +198,6 @@ func GetCompanyStat(c *gin.Context, attendanceDB repo.AttendanceRepo) {
 	res, _ := service.PostprocessStatData(data)
 
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, res)
-}
-
-func validEmail(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
 }
 
 func string2Time(timeStr, format string) (*time.Time, error) {
