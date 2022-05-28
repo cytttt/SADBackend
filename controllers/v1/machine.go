@@ -29,11 +29,11 @@ type MachineStatusResp struct {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/gym/machine [get]
-func GetMachineList(c *gin.Context) {
+func GetMachineList(c *gin.Context, machineDB repo.MachineRepo) {
 	gymID := c.Query("gym_id")
 
 	var machines []model.Machine
-	if err := repo.Machine.MachineList(gymID, &machines); err != nil {
+	if err := machineDB.MachineList(gymID, &machines); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
@@ -49,7 +49,7 @@ func GetMachineList(c *gin.Context) {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/machine/status [put]
-func UpdateMachineStatus(c *gin.Context) {
+func UpdateMachineStatus(c *gin.Context, machineDB repo.MachineRepo) {
 	var updateReq UpdateMachineStatusReq
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
@@ -57,14 +57,14 @@ func UpdateMachineStatus(c *gin.Context) {
 	}
 
 	var machine *model.Machine
-	err := repo.Machine.UpdateAmount(updateReq.MachineID, updateReq.Amount, &machine)
+	err := machineDB.UpdateAmount(updateReq.MachineID, updateReq.Amount, &machine)
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
 
 	var machines []model.Machine
-	if err := repo.Machine.MachineList(machine.Gym, &machines); err != nil {
+	if err := machineDB.MachineList(machine.Gym, &machines); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
@@ -80,11 +80,11 @@ func UpdateMachineStatus(c *gin.Context) {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/gym/machine/category/{gym_id} [get]
-func GetMachineListByCategory(c *gin.Context) {
+func GetMachineListByCategory(c *gin.Context, machineDB repo.MachineRepo) {
 	gymID := c.Param("gym_id")
 
 	var machines []model.Machine
-	if err := repo.Machine.MachineList(gymID, &machines); err != nil {
+	if err := machineDB.MachineList(gymID, &machines); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}

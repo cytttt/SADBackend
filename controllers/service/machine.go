@@ -50,9 +50,9 @@ func PostprocessMachinecategory(raw []model.MachineStatusResp) ([]model.MachineS
 	return results, nil
 }
 
-func FindAvailableMachine(gymID, machineName string) ([]string, error) {
+func FindAvailableMachine(gymID, machineName string, machineDB repo.MachineRepo) ([]string, error) {
 	var machines []model.Machine
-	if err := repo.Machine.GetAvailableMachines(gymID, machineName, &machines); err != nil {
+	if err := machineDB.GetAvailableMachines(gymID, machineName, &machines); err != nil {
 		return []string{}, err
 	}
 	var results []string

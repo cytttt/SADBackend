@@ -4,6 +4,7 @@ import (
 	"SADBackend/controllers"
 	v1 "SADBackend/controllers/v1"
 	_ "SADBackend/docs"
+	"SADBackend/repo"
 	"strings"
 
 	"github.com/gin-contrib/cors"
@@ -31,7 +32,7 @@ func initConfig() cors.Config {
 	return config
 }
 
-func InitRouters() *gin.Engine {
+func InitRouters(dbInstance repo.AllRepo) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
@@ -46,25 +47,51 @@ func InitRouters() *gin.Engine {
 	{
 		gymAPI := apiV1.Group("/gym")
 		{
-			gymAPI.GET("/list", v1.GetGymList)
-			gymAPI.GET("/machine", v1.GetMachineList)
-			gymAPI.GET("/machine/category/:gym_id", v1.GetMachineListByCategory)
+			gymAPI.GET("/list", func(c *gin.Context) {
+				v1.GetGymList(c, dbInstance.Gym)
+			})
+			gymAPI.GET("/machine", func(c *gin.Context) {
+				v1.GetMachineList(c, dbInstance.Machine)
+			})
+			gymAPI.GET("/machine/category/:gym_id", func(c *gin.Context) {
+				v1.GetMachineListByCategory(c, dbInstance.Machine)
+			})
 		}
 		machineAPI := apiV1.Group("/machine")
 		{
-			machineAPI.PUT("/status", v1.UpdateMachineStatus)
+			machineAPI.PUT("/status", func(c *gin.Context) {
+				v1.UpdateMachineStatus(c, dbInstance.Machine)
+			})
 		}
 		userAPI := apiV1.Group("/user")
 		{
-			userAPI.GET("/info", v1.GetClientInfo)
-			userAPI.GET("/reservation/:account", v1.GetClientReservation)
-			userAPI.GET("/stat/:account", v1.GetClientStat)
-			userAPI.GET("/staff/stat", v1.GetCompanyStat)
-			userAPI.GET("/available", v1.GetAvailableTime)
-			userAPI.POST("/login", v1.Login)
-			userAPI.POST("/signup", v1.Signup)
-			userAPI.POST("/reservation", v1.MakeReservation)
-			userAPI.PUT("/info", v1.UpdateClientInfo)
+			userAPI.GET("/info", func(c *gin.Context) {
+				v1.GetClientInfo(c, dbInstance.Client)
+			})
+			userAPI.GET("/reservation/:account", func(c *gin.Context) {
+				v1.GetClientReservation(c, dbInstance.Reservation)
+			})
+			userAPI.GET("/stat/:account", func(c *gin.Context) {
+				v1.GetClientStat(c, dbInstance.Client)
+			})
+			userAPI.GET("/staff/stat", func(c *gin.Context) {
+				v1.GetCompanyStat(c, dbInstance.Attendance)
+			})
+			userAPI.GET("/available", func(c *gin.Context) {
+				v1.GetAvailableTime(c, dbInstance.Machine, dbInstance.Reservation)
+			})
+			userAPI.POST("/login", func(c *gin.Context) {
+				v1.Login(c, dbInstance.Client, dbInstance.Staff)
+			})
+			userAPI.POST("/signup", func(c *gin.Context) {
+				v1.Signup(c, dbInstance.Client)
+			})
+			userAPI.POST("/reservation", func(c *gin.Context) {
+				v1.MakeReservation(c, dbInstance.Reservation)
+			})
+			userAPI.PUT("/info", func(c *gin.Context) {
+				v1.UpdateClientInfo(c, dbInstance.Client)
+			})
 
 		}
 		// apiV1.GET("/test", v1.TTTTT)

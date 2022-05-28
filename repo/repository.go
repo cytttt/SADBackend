@@ -7,6 +7,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+var RepoInstance AllRepo
+
+type AllRepo struct {
+	Client      ClientRepo
+	Staff       StaffRepo
+	Reservation ReservationRepo
+	Gym         GymRepo
+	Machine     MachineRepo
+	Attendance  AttendanceRepo
+}
+
 type ClientRepo interface {
 	Exist(userID string, result interface{}) error
 	UpdateClientInfo(userID string, update bson.M, result interface{}) error
@@ -38,9 +49,9 @@ type AttendanceRepo interface {
 	CompanyStat7days(results interface{}) error
 }
 
-var Client ClientRepo
-var Staff StaffRepo
-var Reservation ReservationRepo
-var Gym GymRepo
-var Machine MachineRepo
-var Attendance AttendanceRepo
+// var Client ClientRepo
+// var Staff StaffRepo
+// var Reservation ReservationRepo
+// var Gym GymRepo
+// var Machine MachineRepo
+// var Attendance AttendanceRepo

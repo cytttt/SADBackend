@@ -16,9 +16,9 @@ import (
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/gym/list [get]
-func GetGymList(c *gin.Context) {
+func GetGymList(c *gin.Context, gymDB repo.GymRepo) {
 	var gyms []model.BranchGym
-	if err := repo.Gym.GymList(&gyms); err != nil {
+	if err := gymDB.GymList(&gyms); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}

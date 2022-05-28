@@ -4,9 +4,7 @@ import (
 	"SADBackend/constant"
 	"SADBackend/model"
 	"SADBackend/pkg/mongodb"
-	"SADBackend/repo"
 	"context"
-	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -36,10 +34,10 @@ func TTTTT(c *gin.Context) {
 	// 	constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 	// 	return
 	// }
-	err := repo.Client.Exist("meowmeow123", &struct{}{})
-	if err == nil {
-		log.Println("nice")
-	}
+	// err := repo.Client.Exist("meowmeow123", &struct{}{})
+	// if err == nil {
+	// 	log.Println("nice")
+	// }
 	// var a *model.Client
 	// err = repo.Client.Exist("meowmeow123", &a)
 	// if err == nil {

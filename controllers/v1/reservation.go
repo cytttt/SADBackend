@@ -40,11 +40,11 @@ type MakeReservationReq struct {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/reservation/{account} [get]
-func GetClientReservation(c *gin.Context) {
+func GetClientReservation(c *gin.Context, reservationDB repo.ReservationRepo) {
 	userID := c.Param("account")
 
 	var results []model.AggrReservationRes
-	if err := repo.Reservation.GetReservation(userID, &results); err != nil {
+	if err := reservationDB.GetReservation(userID, &results); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
@@ -60,7 +60,7 @@ func GetClientReservation(c *gin.Context) {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/reservation [post]
-func MakeReservation(c *gin.Context) {
+func MakeReservation(c *gin.Context, reservationDB repo.ReservationRepo) {
 	var mrReq MakeReservationReq
 	if err := c.ShouldBindJSON(&mrReq); err != nil {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
@@ -73,13 +73,13 @@ func MakeReservation(c *gin.Context) {
 		return
 	}
 
-	err = repo.Reservation.Exist(mrReq.UserID, start, &struct{}{})
+	err = reservationDB.Exist(mrReq.UserID, start, &struct{}{})
 	if err == nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": "already has reservation at the same time"})
 		return
 	}
 
-	if err := repo.Reservation.MakeReservation(mrReq.UserID, mrReq.MachineID, start); err != nil {
+	if err := reservationDB.MakeReservation(mrReq.UserID, mrReq.MachineID, start); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
@@ -98,20 +98,15 @@ func MakeReservation(c *gin.Context) {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/available [get]
-func GetAvailableTime(c *gin.Context) {
+func GetAvailableTime(c *gin.Context, machineDB repo.MachineRepo, reservationDB repo.ReservationRepo) {
 	date := c.Query("date")
 	period := c.Query("period")
 	userID := c.Query("account")
 	gymID := c.Query("branch_gym_id")
 	machinePrefix := c.Query("machine")
 
-	var machines []model.Machine
-	if err := repo.Machine.GetAvailableMachines(gymID, machinePrefix, &machines); err != nil {
-		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
-		return
-	}
 	// find existing reservations
-	machineIDs, err := service.FindAvailableMachine(gymID, machinePrefix)
+	machineIDs, err := service.FindAvailableMachine(gymID, machinePrefix, machineDB)
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
@@ -128,7 +123,7 @@ func GetAvailableTime(c *gin.Context) {
 	}
 
 	var reservations []model.Reservation
-	if err := repo.Reservation.QueryExistReservation(machineIDs, *lb, *ub, &reservations); err != nil {
+	if err := reservationDB.QueryExistReservation(machineIDs, *lb, *ub, &reservations); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}

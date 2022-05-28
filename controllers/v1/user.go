@@ -44,14 +44,14 @@ type ClientInfoResp struct {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/signup [post]
-func Signup(c *gin.Context) {
+func Signup(c *gin.Context, clientDB repo.ClientRepo) {
 	var signupReq model.SignupReq
 	if err := c.ShouldBindJSON(&signupReq); err != nil {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := repo.Client.Exist(signupReq.Account, struct{}{}); err == nil {
+	if err := clientDB.Exist(signupReq.Account, struct{}{}); err == nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_EXISTS, gin.H{"error": err.Error()})
 		return
 	}
@@ -62,7 +62,7 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	if err := repo.Client.Signup(*newClient); err != nil {
+	if err := clientDB.Signup(*newClient); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
@@ -76,7 +76,7 @@ func Signup(c *gin.Context) {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/login [post]
-func Login(c *gin.Context) {
+func Login(c *gin.Context, clientDB repo.ClientRepo, staffDB repo.StaffRepo) {
 	var loginCred LoginCred
 	if err := c.ShouldBindJSON(&loginCred); err != nil {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
@@ -84,7 +84,7 @@ func Login(c *gin.Context) {
 	}
 	if loginCred.UserRole == constant.USER_ROLE_Client {
 		var client *model.Client
-		if err := repo.Client.Exist(loginCred.UserID, &client); err != nil {
+		if err := clientDB.Exist(loginCred.UserID, &client); err != nil {
 			constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_NOT_FOUND, gin.H{"error": err.Error()})
 			return
 		}
@@ -100,7 +100,7 @@ func Login(c *gin.Context) {
 		return
 	} else if loginCred.UserRole == constant.USER_ROLE_Staff {
 		var staff *model.Staff
-		if err := repo.Staff.Exist(loginCred.UserID, &staff); err != nil {
+		if err := staffDB.Exist(loginCred.UserID, &staff); err != nil {
 			constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_NOT_FOUND, gin.H{"error": err.Error()})
 			return
 		}
@@ -126,11 +126,11 @@ func Login(c *gin.Context) {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/info [get]
-func GetClientInfo(c *gin.Context) {
+func GetClientInfo(c *gin.Context, clientDB repo.ClientRepo) {
 	userID := c.Query("account")
 
 	var clientInfo *ClientInfoResp
-	if err := repo.Client.Exist(userID, &clientInfo); err != nil {
+	if err := clientDB.Exist(userID, &clientInfo); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_EXISTS, gin.H{"error": err.Error()})
 		return
 	}
@@ -144,10 +144,10 @@ func GetClientInfo(c *gin.Context) {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/stat/{account} [get]
-func GetClientStat(c *gin.Context) {
+func GetClientStat(c *gin.Context, clientDB repo.ClientRepo) {
 	userID := c.Param("account")
 	var client *model.Client
-	if err := repo.Client.Exist(userID, &client); err != nil {
+	if err := clientDB.Exist(userID, &client); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_EXISTS, gin.H{"error": err.Error()})
 		return
 	}
@@ -161,14 +161,14 @@ func GetClientStat(c *gin.Context) {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/info [put]
-func UpdateClientInfo(c *gin.Context) {
+func UpdateClientInfo(c *gin.Context, clientDB repo.ClientRepo) {
 	var updateReq model.UpdateUserInfoReq
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		constant.ResponseWithData(c, http.StatusBadRequest, constant.INVALID_PARAMS, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := repo.Client.Exist(updateReq.Account, &struct{}{})
+	err := clientDB.Exist(updateReq.Account, &struct{}{})
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR_USER_NOT_FOUND, gin.H{"error": err.Error()})
 		return
@@ -177,7 +177,7 @@ func UpdateClientInfo(c *gin.Context) {
 	update := service.PreprocessUpdateInfo(updateReq)
 
 	var clientInfo *ClientInfoResp
-	if err := repo.Client.UpdateClientInfo(updateReq.Account, update, &clientInfo); err != nil {
+	if err := clientDB.UpdateClientInfo(updateReq.Account, update, &clientInfo); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
@@ -190,9 +190,9 @@ func UpdateClientInfo(c *gin.Context) {
 // @Success 200 {object} constant.Response
 // @Failure 500 {object} constant.Response
 // @Router /api/v1/user/staff/stat [get]
-func GetCompanyStat(c *gin.Context) {
+func GetCompanyStat(c *gin.Context, attendanceDB repo.AttendanceRepo) {
 	var data []model.StatInSecond
-	if err := repo.Attendance.CompanyStat7days(&data); err != nil {
+	if err := attendanceDB.CompanyStat7days(&data); err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
 	}
