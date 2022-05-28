@@ -2,7 +2,7 @@
 FROM golang:1.16 AS builder
 WORKDIR /go/src/sad
 COPY . .
-RUN make install
+RUN make test
 
 # final stage
 FROM ubuntu:20.04
