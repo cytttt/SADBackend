@@ -19,7 +19,7 @@ func TestString2Time(t *testing.T) {
 		args    args
 		want    time.Time
 		wantErr bool
-		ErrMsg  string
+		errMsg  string
 	}{
 		{
 			name: "test case 1: fail, wrong time format",
@@ -29,7 +29,7 @@ func TestString2Time(t *testing.T) {
 			},
 			want:    time.Date(2021, 7, 21, 10, 58, 0, 0, loc),
 			wantErr: true,
-			ErrMsg:  "parsing time \"2021/7/21 10:58\" as \"2006/01/02 15:04\": cannot parse \"7/21 10:58\" as \"01\"",
+			errMsg:  "parsing time \"2021/7/21 10:58\" as \"2006/01/02 15:04\": cannot parse \"7/21 10:58\" as \"01\"",
 		},
 		{
 			name: "test case 2: correct",
@@ -48,7 +48,7 @@ func TestString2Time(t *testing.T) {
 			},
 			want:    time.Date(2021, 8, 1, 10, 58, 0, 0, loc),
 			wantErr: true,
-			ErrMsg:  "parsing time \"2021/07/32 10:58\": day out of range",
+			errMsg:  "parsing time \"2021/07/32 10:58\": day out of range",
 		},
 	}
 	for _, tt := range tests {
@@ -56,7 +56,7 @@ func TestString2Time(t *testing.T) {
 			got, err := string2Time(tt.args.timeStr, tt.args.format)
 			assert.Equal(t, tt.wantErr, (err != nil))
 			if err != nil {
-				assert.Equal(t, tt.ErrMsg, err.Error())
+				assert.Equal(t, tt.errMsg, err.Error())
 				return
 			}
 			assert.Equal(t, tt.want, *got)

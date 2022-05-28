@@ -89,7 +89,7 @@ func GetMachineListByCategory(c *gin.Context, machineDB repo.MachineRepo) {
 		return
 	}
 	rawRes, _ := service.PostprocessMachineList(machines)
-	res, _ := service.PostprocessMachinecategory(rawRes)
+	res, _ := service.PostprocessMachineCategory(rawRes)
 
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, res)
 }

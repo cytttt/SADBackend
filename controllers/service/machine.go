@@ -3,6 +3,7 @@ package service
 import (
 	"SADBackend/model"
 	"SADBackend/repo"
+	"log"
 )
 
 func PostprocessMachineList(raw []model.Machine) ([]model.MachineStatusResp, error) {
@@ -18,7 +19,7 @@ func PostprocessMachineList(raw []model.Machine) ([]model.MachineStatusResp, err
 	return results, nil
 }
 
-func PostprocessMachinecategory(raw []model.MachineStatusResp) ([]model.MachineStatusWrapperResp, error) {
+func PostprocessMachineCategory(raw []model.MachineStatusResp) ([]model.MachineStatusWrapperResp, error) {
 	categoryMapping := [...]model.PartCategory{model.PART_BACK, model.PART_CHEST, model.PART_CARDIO, model.PART_ABS, model.PART_LEG, model.PART_ARM, model.PART_HIPS}
 
 	sortedResults := make(map[model.PartCategory][]model.MachineStatusResp)
@@ -55,6 +56,7 @@ func FindAvailableMachine(gymID, machineName string, machineDB repo.MachineRepo)
 	if err := machineDB.GetAvailableMachines(gymID, machineName, &machines); err != nil {
 		return []string{}, err
 	}
+	log.Println(machines)
 	var results []string
 	for _, i := range machines {
 		results = append(results, i.MachineID)
