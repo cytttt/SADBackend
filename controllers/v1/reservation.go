@@ -5,9 +5,7 @@ import (
 	"SADBackend/controllers/service"
 	"SADBackend/model"
 	"SADBackend/repo"
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -116,7 +114,7 @@ func GetAvailableTime(c *gin.Context, machineDB repo.MachineRepo, reservationDB 
 		return
 	}
 
-	lb, ub, err := getTimeRangeBound(period, date)
+	lb, ub, err := service.GetTimeRangeBound(period, date)
 	if err != nil {
 		constant.ResponseWithData(c, http.StatusOK, constant.ERROR, gin.H{"error": err.Error()})
 		return
@@ -134,28 +132,4 @@ func GetAvailableTime(c *gin.Context, machineDB repo.MachineRepo, reservationDB 
 		return
 	}
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, res)
-}
-
-func getTimeRangeBound(tr string, date string) (*time.Time, *time.Time, error) {
-	startBase, err := string2Time(date, "2006-01-02")
-	if err != nil {
-		return nil, nil, err
-	}
-	var ub, lb time.Time
-	if tr == string(TIME_MORNING) {
-		lb = startBase.Add(time.Duration(6) * time.Hour)
-		ub = startBase.Add(time.Duration(12) * time.Hour).Add(-30 * time.Minute)
-	} else if tr == string(TIME_AFTERNOON) {
-		lb = startBase.Add(time.Duration(12) * time.Hour)
-		ub = startBase.Add(time.Duration(18) * time.Hour).Add(-30 * time.Minute)
-	} else if tr == string(TIME_EVENING) {
-		lb = startBase.Add(time.Duration(18) * time.Hour)
-		ub = startBase.Add(time.Duration(21) * time.Hour).Add(-30 * time.Minute)
-	} else if tr == string(TIME_MIDNIGHT) {
-		lb = startBase.Add(time.Duration(21) * time.Hour)
-		ub = startBase.Add(time.Duration(24) * time.Hour).Add(-30 * time.Minute)
-	} else {
-		return nil, nil, fmt.Errorf("unknown time range: %s", tr)
-	}
-	return &lb, &ub, nil
 }

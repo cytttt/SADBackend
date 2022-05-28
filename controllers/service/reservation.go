@@ -2,6 +2,7 @@ package service
 
 import (
 	"SADBackend/model"
+	"fmt"
 	"math/rand"
 	"sort"
 	"time"
@@ -39,6 +40,30 @@ func ComputeStartTime(yyyymmdd, hhmm string) (time.Time, error) {
 	start := startBase.Add(time.Duration(startHour.Hour()) * time.Hour)
 	start = start.Add(time.Duration(startHour.Minute()) * time.Minute)
 	return start, nil
+}
+
+func GetTimeRangeBound(tr string, date string) (*time.Time, *time.Time, error) {
+	startBase, err := string2Time(date, "2006-01-02")
+	if err != nil {
+		return nil, nil, err
+	}
+	var ub, lb time.Time
+	if tr == string(TIME_MORNING) {
+		lb = startBase.Add(time.Duration(6) * time.Hour)
+		ub = startBase.Add(time.Duration(12) * time.Hour).Add(-30 * time.Minute)
+	} else if tr == string(TIME_AFTERNOON) {
+		lb = startBase.Add(time.Duration(12) * time.Hour)
+		ub = startBase.Add(time.Duration(18) * time.Hour).Add(-30 * time.Minute)
+	} else if tr == string(TIME_EVENING) {
+		lb = startBase.Add(time.Duration(18) * time.Hour)
+		ub = startBase.Add(time.Duration(21) * time.Hour).Add(-30 * time.Minute)
+	} else if tr == string(TIME_MIDNIGHT) {
+		lb = startBase.Add(time.Duration(21) * time.Hour)
+		ub = startBase.Add(time.Duration(24) * time.Hour).Add(-30 * time.Minute)
+	} else {
+		return nil, nil, fmt.Errorf("unknown time range: %s", tr)
+	}
+	return &lb, &ub, nil
 }
 
 func FindKAvailabeTime(userID string, res []model.Reservation, mID []string, lbd time.Time, ubd time.Time, k int) ([]model.GetAvailableTimeResp, error) {
@@ -91,11 +116,4 @@ func FindKAvailabeTime(userID string, res []model.Reservation, mID []string, lbd
 		AvailableTime = append(AvailableTime, tmpAvailableTime[p])
 	}
 	return AvailableTime, nil
-}
-
-func min(x, y int) int {
-	if x > y {
-		return y
-	}
-	return x
 }

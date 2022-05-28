@@ -199,13 +199,3 @@ func GetCompanyStat(c *gin.Context, attendanceDB repo.AttendanceRepo) {
 
 	constant.ResponseWithData(c, http.StatusOK, constant.SUCCESS, res)
 }
-
-func string2Time(timeStr, format string) (*time.Time, error) {
-	offset := int((8 * time.Hour).Seconds())
-	loc := time.FixedZone("Asia/Taipei", offset)
-	newTime, err := time.ParseInLocation(format, timeStr, loc)
-	if err != nil {
-		return nil, err
-	}
-	return &newTime, err
-}

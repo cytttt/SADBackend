@@ -56,16 +56,6 @@ func PreprocessUpdateInfo(req model.UpdateUserInfoReq) bson.M {
 	return update
 }
 
-func string2Time(timeStr, format string) (*time.Time, error) {
-	offset := int((8 * time.Hour).Seconds())
-	loc := time.FixedZone("Asia/Taipei", offset)
-	newTime, err := time.ParseInLocation(format, timeStr, loc)
-	if err != nil {
-		return nil, err
-	}
-	return &newTime, err
-}
-
 func VerifyPwd(req, ref string) error {
 	pwdCrypto := fmt.Sprintf("%x", sha256.Sum256([]byte(req)))
 	if pwdCrypto != ref {
