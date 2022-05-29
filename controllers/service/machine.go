@@ -3,7 +3,6 @@ package service
 import (
 	"SADBackend/model"
 	"SADBackend/repo"
-	"log"
 )
 
 func PostprocessMachineList(raw []model.Machine) ([]model.MachineStatusResp, error) {
@@ -56,7 +55,6 @@ func FindAvailableMachine(gymID, machineName string, machineDB repo.MachineRepo)
 	if err := machineDB.GetAvailableMachines(gymID, machineName, &machines); err != nil {
 		return []string{}, err
 	}
-	log.Println(machines)
 	var results []string
 	for _, i := range machines {
 		results = append(results, i.MachineID)
