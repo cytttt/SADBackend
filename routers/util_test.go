@@ -16,14 +16,13 @@ import (
 )
 
 const (
-	testPwd                  = "test-pwd"
-	testClientID             = "test-client-1"
-	testClientName           = "test-client-amy"
-	testClientGender         = "female"
-	testStaffID              = "test-staff-1"
-	testStaffName            = "test-staff-amy"
-	testStaffLevel           = "rookie"
-	TestGetClientInfoResBody = "{\"code\":200,\"data\":{\"account\":\"test-client-1\",\"body_info\":{\"Height\":0,\"Weight\":0},\"created_at\":\"0001-01-01T00:00:00Z\",\"email\":\"\",\"name\":\"test-client-amy\",\"payment_method\":{\"Account\":\"\",\"PayType\":\"\"},\"personal_info\":{\"Birthday\":\"0001-01-01T00:00:00Z\",\"Gender\":\"female\",\"Phone\":\"\"},\"subscription\":{\"ExpiredAt\":\"0001-01-01T00:00:00Z\",\"Plan\":\"\"},\"updated_at\":\"0001-01-01T00:00:00Z\"},\"msg\":\"Ok\"}"
+	testPwd          = "test-pwd"
+	testClientID     = "test-client-1"
+	testClientName   = "test-client-amy"
+	testClientGender = "female"
+	testStaffID      = "test-staff-1"
+	testStaffName    = "test-staff-amy"
+	testStaffLevel   = "rookie"
 )
 
 type FakeClientRepo struct{}
