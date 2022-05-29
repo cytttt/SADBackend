@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,6 +17,7 @@ func TestGetClientInfo(t *testing.T) {
 	testRepo := repo.AllRepo{
 		Client: FakeClientRepo{},
 	}
+	gin.SetMode(gin.TestMode)
 	router := routes.InitRouters(testRepo)
 	tests := []struct {
 		name           string
@@ -53,6 +55,7 @@ func TestGetClientStat(t *testing.T) {
 	testRepo := repo.AllRepo{
 		Client: FakeClientRepo{},
 	}
+	gin.SetMode(gin.TestMode)
 	router := routes.InitRouters(testRepo)
 	tests := []struct {
 		name           string
@@ -89,6 +92,7 @@ func TestLogin(t *testing.T) {
 		Client: FakeClientRepo{},
 		Staff:  FakeStaffRepo{},
 	}
+	gin.SetMode(gin.TestMode)
 	router := routes.InitRouters(testRepo)
 	// test client
 	tests := []struct {

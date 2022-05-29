@@ -203,12 +203,13 @@ func TestFindKAvailabeTime(t *testing.T) {
 			},
 			wantErr: false,
 			want: []model.GetAvailableTimeResp{
+				{Start: "12:00", End: "12:30", MachineID: "test-machine-2"},
 				{Start: "12:30", End: "13:00", MachineID: "test-machine-2"},
+				{Start: "13:00", End: "13:30", MachineID: "test-machine-1"},
 				{Start: "13:30", End: "14:00", MachineID: "test-machine-1"},
 				{Start: "14:00", End: "14:30", MachineID: "test-machine-2"},
 				{Start: "14:30", End: "15:00", MachineID: "test-machine-2"},
-				{Start: "15:00", End: "15:30", MachineID: "test-machine-2"},
-			},
+				{Start: "15:00", End: "15:30", MachineID: "test-machine-2"}},
 		},
 	}
 	for _, tt := range tests {
