@@ -4,7 +4,7 @@ import (
 	"SADBackend/constant"
 	"SADBackend/pkg/mongodb"
 	"SADBackend/repo"
-	"SADBackend/routers"
+	routes "SADBackend/routers"
 	"fmt"
 	"os"
 	"os/signal"
@@ -26,7 +26,7 @@ func main() {
 	}
 
 	gin.SetMode(gin.DebugMode)
-	router := routers.InitRouters(repo.RepoInstance)
+	router := routes.InitRouters(repo.RepoInstance)
 
 	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGILL, syscall.SIGFPE)
