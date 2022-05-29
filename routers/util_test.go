@@ -1,6 +1,7 @@
 package routes_test
 
 import (
+	"SADBackend/constant"
 	v1 "SADBackend/controllers/v1"
 	"SADBackend/model"
 	"bytes"
@@ -18,7 +19,9 @@ import (
 const (
 	testPwd          = "test-pwd"
 	testClientID     = "test-client-1"
+	testClientID2    = "test-client-2"
 	testClientName   = "test-client-amy"
+	testClientEmail  = "client@test.com"
 	testClientGender = "female"
 	testStaffID      = "test-staff-1"
 	testStaffName    = "test-staff-amy"
@@ -51,12 +54,27 @@ func (_ FakeClientRepo) Exist(userID string, result interface{}) error {
 			},
 		}
 	default:
+		if userID != testClientID {
+			return constant.NewError(constant.ERROR)
+		}
 		log.Println("check exist")
 	}
 	return nil
 }
 
 func (_ FakeClientRepo) UpdateClientInfo(userID string, update bson.M, result interface{}) error {
+	switch result.(type) {
+	case **v1.ClientInfoResp:
+		res := result.(**v1.ClientInfoResp)
+		*res = &v1.ClientInfoResp{
+			UserID: testClientID,
+		}
+	default:
+		if userID != testClientID {
+			return constant.NewError(constant.ERROR)
+		}
+		log.Println("check exist")
+	}
 	return nil
 }
 func (_ FakeClientRepo) Signup(newClient model.Client) error { return nil }
@@ -84,6 +102,24 @@ type FakeReservationRepo struct{}
 type FakeGymRepo struct{}
 type FakeMachineRepo struct{}
 type FakeAttendanceRepo struct{}
+
+func (_ FakeAttendanceRepo) CompanyStat7days(results interface{}) error {
+	switch results.(type) {
+	case *[]model.StatInSecond:
+		res := results.(*[]model.StatInSecond)
+		*res = append(*res, model.StatInSecond{
+			AttendanceCount: 10,
+			AvgStaySecond:   3600,
+		})
+		*res = append(*res, model.StatInSecond{
+			AttendanceCount: 12,
+			AvgStaySecond:   4800,
+		})
+	default:
+		log.Print("unknown type")
+	}
+	return nil
+}
 
 func request(router *gin.Engine, method string, path string, body *bytes.Buffer, query map[string]string) (*httptest.ResponseRecorder, map[string]interface{}) {
 	w := httptest.NewRecorder()
