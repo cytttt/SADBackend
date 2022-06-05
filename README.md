@@ -1,17 +1,19 @@
 # SAD 2022 Final Project Backend
 
-## requirement
+## Requirement
 `go 1.16`
 
-## run server
+## API Document
+please refer to `document.md`
+## Run Server
 `make install`
 
 `./SADBackend`
 
-## run unit test
+## Run Unit Test
 `make test`
 
-## directory structure
+## Directory Structure
 
 ```
 root/ -- routers/                     # routing path
