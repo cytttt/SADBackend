@@ -1,5 +1,8 @@
 # SAD 2022 Final Project Backend
 
+## requirement
+`go 1.16`
+
 ## run server
 `make install`
 
