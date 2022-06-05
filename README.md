@@ -4,7 +4,7 @@
 `go 1.16`
 
 ## API Document
-please refer to `document.md`
+please refer to `Document.md`
 ## Run Server
 `make install`
 
